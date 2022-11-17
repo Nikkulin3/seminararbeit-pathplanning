@@ -1,0 +1,57 @@
+%   Version 3.0 | Lehrstuhl Produktionsinformatik  |  27.08.2020
+%%%%%%%%%  Zusätzlich benötigte Pakete in den Header einfügen  %%%%%%%%%%
+\input{src/header.tex}
+
+%%%%%%%%%%%%%    Einbinden der Quellen    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\addbibresource{src/references.bib}
+
+%%%%%%%%%%%%%%%   Folgenden Abschnitt anpassen!    %%%%%%%%%%%%%%%%%%%%%%
+% Arbeit
+\newcommand{\artderausarbeitung}{Seminararbeit}
+\newcommand{\titelderarbeit}{Verbesserung der Pfad- und Trajektorienplanung am UR5}
+% Autor
+\newcommand{\namedesautors}{Nik Julin Nowoczyn}
+\newcommand{\matrikelnummer}{8529776}
+\newcommand{\studiengang}{Ingenieurinformatik}
+\newcommand{\pruefer}{Prof.~Dr.-Ing.~Johannes Schilp}
+\newcommand{\betreuer}{Ludwig Vogt}
+\newcommand{\ausgabedatum}{01.\,10.\,2022}
+\newcommand{\abgabedatum}{31.\,03.\,2023}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Hier können eigene Befehle angelegt werden:
+%\newcommand{\Name}{Definition}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+    \onehalfspacing
+    \input{src/pagestyle.tex}
+    \input{src/titlepage.tex}
+    \pagenumbering{Roman}
+    \onehalfspacing
+    \input{001_Aufgabenstellung.tex}
+    \input{002_Kurzfassung.tex}
+    \tableofcontents        % Inhaltsverzeichnis
+    \listoffigures        % Abb.verzeichnis
+    \listoftables        % Tabellenverzeichnis
+    \input{003_Abkuerzungsverzeichnis.tex}
+    \cleardoublepage
+    \pagenumbering{arabic}
+%%%%%%%%%%%%%%     Eigene Kapitel hier einfügen    %%%%%%%%%%%%%%%%%%%%%%
+    \input{010_Räumliche_Beschreibungsformalismen.tex}
+    \input{020_Direkte_Kinematik.tex}
+    \input{030_Inverse_Kinematik.tex}
+    \input{040_Pfadplanung.tex}
+    \input{050_Trajektorienplanung.tex}
+    \input{190_Fazit.tex}
+%    \input{006_Konzept.tex}
+%    \input{007_Umsetzung.tex}
+%    \input{008_Verwendung.tex}
+%    \input{009_Ausblick.tex}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \cleardoublepage
+    \printbibliography    % Lit.verzeichnis
+%    \input{198_Anhang.tex}
+    \input{199_Abschlusserklaerung.tex}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

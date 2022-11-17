@@ -1,0 +1,92 @@
+% Wird auf alle nicht leeren Seiten angewandt
+% siehe auch;
+% http://tug.ctan.org/tex-archive/macros/latex/contrib/fancyhdr/fancyhdr.pdf
+\fancypagestyle{title}{%
+	\fancyhf{}
+	\fancyhead[L]{Fakultät für Angewandte Informatik \\
+		\textbf{Lehrstuhl für Produktionsinformatik} \\ Prof. Dr.-Ing. Johannes Schilp}
+
+	\fancyhead[R]{
+		\raisebox{0pt}[0pt][0pt]{\includegraphics[width=3.5cm]{src/Uni_Aug_Logo_Basis_pos_A.pdf}}
+	}
+
+	\renewcommand{\headrulewidth}{0.4pt} %obere Trennlinie
+}
+
+
+\renewcommand{\chaptermark}[1]{\markboth{
+		\thechapter. #1}{}}
+%\renewcommand{\sectionmark}[1]{\markboth{
+%		\thesection. #1}{}}
+
+
+\pagestyle{fancyplain}% <- pagestyle fancyplain
+\renewcommand\plainheadrulewidth{.4pt}% headrule on plain pages
+\fancyhf{}
+\fancyhead[L]{\namedesautors}
+\fancyhead[R]{\leftmark}
+%\fancyhead[R]{\rightmark}
+\fancyfoot[RE,LO]{}
+\fancyfoot[LE,RO]{\pagemark}
+\renewcommand{\chaptermark}[1]{%
+	\markboth{#1}{}}
+
+
+\headsep = 20pt % COOLER CODE: Das Ding setzt die Margin zwischen Header und Text darunter
+				% Bei Überschriften setzt sich diese Margin aber aus dieser bottom Margin + der
+				% top Margin von Überschriften zusammen. Diese kann mit dem folgenden Command
+				% geändert werden:
+\renewcommand*{\chapterheadstartvskip}{\vspace*{0cm}} % COOLER CODE:
+													  % Setzt top Margin bei \chapter. Wenn dus
+													  % so haben willst wie vorher, einfach die
+													  % Zeile löschen. Selbe gilt bei \headsep
+
+%%  Der Vollständigkeithalber die alten verschiedenen Pagestyles von Peter
+%   pagestyle.tex
+%   Version 1.0     |   Peter Krönes    |   08.05.2018
+
+%%%%%%%%%%%%%%%%%%%%%%%  PAGESTYLE  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%\usepackage{fancyhdr}
+%\pagestyle{fancy}
+%\renewcommand{\chaptermark}[1]{\markboth{
+%		\thechapter. #1}{}}
+%\renewcommand{\sectionmark}[1]{\markboth{
+%		\thesection. #1}{}}
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\fancypagestyle{scrheadings}{
+%	\fancyhead[LE,RO]{\nouppercase\leftmark} 	% Kapitelname oben ins andere Eck
+%	\fancyhead[LO,RE]{\namedesautors}	% Autor oben im Eck
+%	\fancyfoot[LE,RO]{\pagemark} 		% Seitenzahl unten im Eck
+%	\fancyfoot[C]{}
+%}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Pagestyle für die erste Seite der List of Figures/Tables
+%\fancypagestyle{pagenumberstyle}{
+%	\renewcommand{\headrulewidth}{0pt}
+%
+%	\fancyhead[LE,RO]{\chaptermark} 	% Kapitelname oben ins andere Eck
+%	\fancyhead[LO,RE]{\namedesautors}	% Autor oben im Eck
+%	\fancyfoot[LE,RO]{\pagemark} 		% Seitenzahl unten im Eck
+%	\fancyfoot[C]{}
+%}
+% Unterscheidung zwischen einseitig und zweiseitigem Druck nicht nötig, da Kapitel bei zweiseitigem Druck immer rechts anfangen.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Pagestyle für scrartcl
+%\fancypagestyle{articlestyle}{
+%	\renewcommand{\headrulewidth}{0.1pt}
+%	\fancyhead[LE,RO]{\chaptermark} 	% Kapitelname oben ins andere Eck
+%	\fancyhead[LO,RE]{\namedesautors}	% Autor oben im Eck
+%	\fancyfoot[LE,RO]{\pagemark} 		% Seitenzahl unten im Eck
+%	\fancyfoot[C]{}
+%}
+% Unterscheidung zwischen einseitig und zweiseitigem Druck nicht nötig, da Kapitel bei zweiseitigem Druck immer rechts anfangen.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%% wurde dann vor listoffigures, listoftables, tableofcontents und printbibliography
+%% wie folgt eingestellt: \tableofcontents{\thispagestyle{pagenumberstyle}}
