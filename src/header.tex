@@ -43,7 +43,7 @@
 \restylefloat{table}						% ^^^^^^^^^^^^^^^^^^^^
 \usepackage{pdfpages}                       % PDF Seitenweise einfügen
 \usepackage[font=normalsize]{caption}       % Größe der Bild-/Tabellenunterschrift
-\usepackage{acronym}         				% Abkürzungsverzeichnis
+\usepackage[printonlyused]{acronym}         				% Abkürzungsverzeichnis
 \newcommand{\acrosecondcolumn}[1]{
   \acroextra{\makebox[70mm][l]{#1}}
 }
@@ -102,6 +102,8 @@
 
 %% Mathematik-Pakete für Formeln
 \usepackage{amsmath}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
 \usepackage{amssymb}
 \usepackage{amstext}
 \usepackage{amsfonts}
