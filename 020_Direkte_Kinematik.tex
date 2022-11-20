@@ -1,16 +1,18 @@
 \cleardoublepage
 
 
-\chapter{Direkte Kinematik}
+\chapter{Direkte Kinematik}\label{ch:direkte-kinematik}
+
+?? Quelle
 
 Die direkte Kinematik ist dafür verantwortlich aus den verschiedenen Winkeln und Positionen der Gelenke die Rotation und Position des Endeffektors im Raum zu berechnen.
 Dazu wird zunächst in jedem Gelenk ein Koordinatenursprung gelegt, der eine Nullstellung jedes Gelenks beschreibt.
-Um alle Gelenke in einer kinematischen Kette abzubilden, kann dann beispielsweise mithilfe der homogenen Transformationsmatrix (Abschnitt~\ref{sec:homogene-transformationsmatrix}) und einem Parameter in den Freiheitsgraden des entsprechenden Gelenks eine Rechenvorschrift aufgebaut werden, um den Roboter zu beschreiben und die Position des Endeffektors schnell bestimmen zu können. (?? Quelle)
+Um alle Gelenke in einer kinematischen Kette abzubilden, kann dann beispielsweise mithilfe der homogenen Transformationsmatrix (Abschnitt~\ref{sec:homogene-transformationsmatrix}) und einem Parameter in den Freiheitsgraden des entsprechenden Gelenks eine Rechenvorschrift aufgebaut werden, um den Roboter zu beschreiben und die Position des Endeffektors schnell bestimmen zu können.
 
 
-\section{DH-Konvention}
+\section{DH-Konvention}\label{sec:dh-konvention}
 
-(?? Quelle)
+?? Quelle
 
 Die Konvention, die in der Regel verwendet wird, um Rotation und Translation eines Gliedes der kinematischen Kette darzustellen ist die sog.\ \ac{dhk} oder DH-Transformation.
 \ac{dhk} beschreibt, wie die Koordinatensysteme basieren auf dem vorherigen Koordinatensystem beschrieben werden.
@@ -108,11 +110,66 @@ Um nun Koordinatensystem $n-1$ in Koordinatensystem $n$ zu überführen, kann di
 \end{figure}
 
 
-\section{URDF}
+\section{Unified Robot Description Format}\label{sec:urdf}
+
+?? Quelle
+\ac{urdf} ist ein Standard entwickelt für \ac{ros}, um sowohl die geometrischen als auch physische und visuelle Eigenschaften eines Roboters zu beschreiben.
+Für die Beschreibung ist eine auf XML basierende Datei nötig, die mit Tags geschachtelt den Roboter mithilfe von sog. \enquote{links} und \enquote{joints} beschreibt.
+
+Links beschreiben die physischen Verbindungen zwischen zwei Gelenken.
+Dabei wird unterschieden zwischen visuellen Eigenschaften (\enquote{visual}), Kollisionseigenschaften (\enquote{collision}) und Trägheitseigenschaften (\enquote{inertial}).
+Jede dieser Kategorien kann so die Geometrie des Links aus verschiedenen Perspektiven unterschiedlich beschreiben
+
+Joints bezeichnen Gelenke, also die Verbindungen zweier Links und beschreiben die mögliche relative Bewegung zwischen diesen.
+Dabei sind nicht nur translatorische (\enquote{prismatic}) und rotatorische Gelenke (\enquote{revolute}) beschreibbar, sondern auch feste (\enquote{fixed}), schwebende (\enquote{floating}) und planare Verbindungen (\enquote{planar}).
+Für die Beschreibung eines Joints wird der vorhergehende Link als \enquote{parent} und der nächste Link als \enquote{child} bezeichnet.
+Zudem müssen im Feld \enquote{origin} Translation und Rotation des Ursprungs im Koordinatensystem des Parent Links, sowie im Feld \enquote{axis} je nach Gelenk die Rotationsachse, Translationsachse oder Normale der Bewegungsoberfläche angegeben werden.
+Desweiteren ist es möglich, Schnittstellen für die Bewegung der Motoren zu definieren und Bewegungslimits für die Gelenke anzugeben, um die Ansteuerung des Roboters und die Bewegungsplanung zu vereinfachen.
 
 
-\section{Robotics API}
+\section{Beschreibung des UR5e}\label{sec:ur5-in-dh}
+?? Quelle https://www.universal-robots.com/articles/ur/application-installation/dh-parameters-for-calculations-of-kinematics-and-dynamics/
 
+Der in dieser Arbeit betrachtete Roboter ist der UR5e von Universal Robots.
+Dieser ist ein vergleichsweise günstiger Roboter mit verringerter Zahl an Singularitäten (siehe Abschnitt~\ref{sec:singularitaten}).
+Offiziell wird der Roboter mit den DH-Parametern aus Tabelle~\ref{tab:ur5-dh1} und dynamischen Eigenschaften der Links aus Tabelle~\ref{tab:ur5-dh2} beschrieben.
 
-\section{UR5 in DH}
+?? verweis auf anhang
+
+?? Bild ergänzen
+
+\begin{table}
+    \centering
+    \begin{tabular}{lrrrllrl}
+        \toprule
+        \textbf{Joint} & $\boldsymbol{\theta}$ \textbf{[rad]} & $\boldsymbol{a}$ \textbf{[m]} & $\boldsymbol{d}$ \textbf{[m]} & $\boldsymbol{\alpha}$ \textbf{[rad]}  \\
+        \midrule
+        Joint 1        & 0                                    & 0                             & 0.1625                        & \pi/2                                \\
+        Joint 2        & 0                                    & -0.425                        & 0                             & 0                                    \\
+        Joint 3        & 0                                    & -0.3922                       & 0                             & 0                                    \\
+        Joint 4        & 0                                    & 0                             & 0.1333                        & \pi/2                                \\
+        Joint 5        & 0                                    & 0                             & 0.0997                        & -\pi/2                               \\
+        Joint 6        & 0                                    & 0                             & 0.0996                        & 0                                    \\
+        \bottomrule
+    \end{tabular}
+    \caption{DH-Parameter des UR5e Roboters von Universal Robots}
+    \label{tab:ur5-dh1}
+\end{table}
+\begin{table}
+    \centering
+    \begin{tabular}{lrrrllrl}
+        \toprule
+        \textbf{Link} & \textbf{Mass [kg]} & \textbf{Center of Mass [m]} \\
+        \midrule
+        Link 1        & 3.761              & [0, -0.02561, 0.00193]      \\
+        Link 2        & 8.058              & [0.2125, 0, 0.11336]        \\
+        Link 3        & 2.846              & [0.15, 0.0, 0.0265]         \\
+        Link 4        & 1.37               & [0, -0.0018, 0.01634]       \\
+        Link 5        & 1.3                & [0, 0.0018,0.01634]         \\
+        Link 6        & 0.365              & [0, 0, -0.001159]           \\
+        \bottomrule
+    \end{tabular}
+    \caption{Beschreibung der dynamischen Eigenschaften des UR5e Roboters von Universal Robots}
+    \label{tab:ur5-dh2}
+\end{table}
 
