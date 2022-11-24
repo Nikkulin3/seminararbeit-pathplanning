@@ -21,9 +21,10 @@ function compile() {
     pdflatex -interaction=nonstopmode 000_Main.tex
 #    pdflatex -interaction=nonstopmode -halt-on-error 000_Main.tex
 }
-biber 000_Main
 compile
 biber 000_Main
 compile
+biber 000_Main
+
 compile
 #clean

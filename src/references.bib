@@ -463,6 +463,24 @@
   doi = {10.2307/1403797}
 }
 
+@misc{fujimotoAddressingFunctionApproximation2018,
+  title = {Addressing {{Function Approximation Error}} in {{Actor-Critic Methods}}},
+  author = {Fujimoto, Scott and van Hoof, Herke and Meger, David},
+  options = {useprefix=true},
+  date = {2018-10-22},
+  number = {arXiv:1802.09477},
+  eprint = {1802.09477},
+  eprinttype = {arxiv},
+  primaryclass = {cs, stat},
+  publisher = {{arXiv}},
+  url = {http://arxiv.org/abs/1802.09477},
+  urldate = {2022-11-24},
+  abstract = {In value-based reinforcement learning methods such as deep Q-learning, function approximation errors are known to lead to overestimated value estimates and suboptimal policies. We show that this problem persists in an actor-critic setting and propose novel mechanisms to minimize its effects on both the actor and the critic. Our algorithm builds on Double Q-learning, by taking the minimum value between a pair of critics to limit overestimation. We draw the connection between target networks and overestimation bias, and suggest delaying policy updates to reduce per-update error and further improve performance. We evaluate our method on the suite of OpenAI gym tasks, outperforming the state of the art in every environment tested.},
+  archiveprefix = {arXiv},
+  keywords = {Computer Science - Artificial Intelligence,Computer Science - Machine Learning,Statistics - Machine Learning},
+  file = {/home/julin/Zotero/storage/CKBHBUN9/Fujimoto et al. - 2018 - Addressing Function Approximation Error in Actor-C.pdf;/home/julin/Zotero/storage/GJ7Z6TT3/1802.html}
+}
+
 @online{GitHubLornatangTfgans,
   title = {{{GitHub}} - {{Lornatang}}/Tf-Gans: {{Tensorflow}} Implements the Most Primitive {{GAN}}},
   url = {https://github.com/Lornatang/tf-gans},
@@ -591,6 +609,19 @@
   file = {/home/julin/Zotero/storage/9Q7RL9Z2/content.pdf}
 }
 
+@inproceedings{hasseltDoubleQlearning2010,
+  title = {Double {{Q-learning}}},
+  booktitle = {Advances in {{Neural Information Processing Systems}}},
+  author = {Hasselt, Hado},
+  date = {2010},
+  volume = {23},
+  publisher = {{Curran Associates, Inc.}},
+  url = {https://proceedings.neurips.cc/paper/2010/hash/091d584fced301b442654dd8c23b3fc9-Abstract.html},
+  urldate = {2022-11-24},
+  abstract = {In some stochastic environments the well-known reinforcement learning algorithm Q-learning performs very poorly. This poor performance is caused by large overestimations of action values. These overestimations result from a positive bias that is introduced because Q-learning uses the maximum action value as an approximation for the maximum expected action value. We introduce an alternative way to approximate the maximum expected value for any set of random variables. The obtained double estimator method is shown to sometimes underestimate rather than overestimate the maximum expected value. We apply the double estimator to Q-learning to construct Double Q-learning, a new off-policy reinforcement learning algorithm. We show the new algorithm converges to the optimal policy and that it performs well in some settings in which Q-learning performs poorly due to its overestimation.},
+  file = {/home/julin/Zotero/storage/DIWNKWWF/Hasselt - 2010 - Double Q-learning.pdf}
+}
+
 @report{heywoodRoad2050Potential2015,
   title = {On the {{Road}} toward 2050: {{Potential}} for {{Substantial Reductions}} in {{Light-Duty Vehicle Energy Use}} and {{Greenhouse Gas Emissions}}},
   author = {Heywood, John and MacKenzie, Mac},
@@ -651,6 +682,17 @@
   urldate = {2020-11-02},
   abstract = {Code for the FlowFrontNet Paper; submitted to ECML 2020},
   organization = {{Institute for Software \& Systems Engineering}}
+}
+
+@online{jahobrCoordinateSystemsDenavitHartenberg2007,
+  title = {Coordinate systems and Denavit-Hartenberg parameters},
+  shorttitle = {Datei},
+  author = {{Jahobr}},
+  date = {2007},
+  url = {https://commons.wikimedia.org/wiki/File:Denavit-Hartenberg-Transformation.svg},
+  urldate = {2022-11-24},
+  langid = {ngerman},
+  file = {/home/julin/Zotero/storage/L5WI35VW/DateiDenavit-Hartenberg-Transformation.html}
 }
 
 @misc{julianValidationImageBasedNeural2020,
@@ -854,6 +896,24 @@
   file = {/home/julin/Zotero/storage/NISFP5XN/Lim et al. - 2013 - Reinforcement Learning in Robust Markov Decision P.pdf}
 }
 
+@misc{liPolyakRuppertAveragedQLearningStatistically2022,
+  title = {Polyak-{{Ruppert-Averaged Q-Learning}} Is {{Statistically Efficient}}},
+  author = {Li, Xiang and Yang, Wenhao and Liang, Jiadong and Zhang, Zhihua and Jordan, Michael I.},
+  date = {2022-02-07},
+  number = {arXiv:2112.14582},
+  eprint = {2112.14582},
+  eprinttype = {arxiv},
+  primaryclass = {cs, stat},
+  publisher = {{arXiv}},
+  doi = {10.48550/arXiv.2112.14582},
+  url = {http://arxiv.org/abs/2112.14582},
+  urldate = {2022-11-24},
+  abstract = {We study synchronous Q-learning with Polyak-Ruppert averaging (a.k.a., averaged Q-learning) in a \$\textbackslash gamma\$-discounted MDP. We establish a functional central limit theorem (FCLT) for the averaged iteration \$\textbackslash bar\{\textbackslash boldsymbol\{Q\}\}\_T\$ and show its standardized partial-sum process converges weakly to a rescaled Brownian motion. Furthermore, we show that \$\textbackslash bar\{\textbackslash boldsymbol\{Q\}\}\_T\$ is actually a regular asymptotically linear (RAL) estimator for the optimal Q-value function \$\textbackslash boldsymbol\{Q\}\^*\$ with the most efficient influence function. This implies the averaged Q-learning iteration has the smallest asymptotic variance among all RAL estimators. In addition, we present a nonasymptotic analysis for the \$\textbackslash ell\_\{\textbackslash infty\}\$ error \$\textbackslash mathbb\{E\}\textbackslash |\textbackslash bar\{\textbackslash boldsymbol\{Q\}\}\_T-\textbackslash boldsymbol\{Q\}\^*\textbackslash |\_\{\textbackslash infty\}\$, showing that for polynomial step sizes it matches the instance-dependent lower bound as well as the optimal minimax complexity lower bound. In short, our theoretical analysis shows that averaged Q-learning is statistically efficient.},
+  archiveprefix = {arXiv},
+  keywords = {Computer Science - Machine Learning,Statistics - Machine Learning},
+  file = {/home/julin/Zotero/storage/B39FIPVZ/Li et al. - 2022 - Polyak-Ruppert-Averaged Q-Learning is Statisticall.pdf;/home/julin/Zotero/storage/H7UCD9JB/2112.html}
+}
+
 @inproceedings{liPrecomputedRealTimeTexture2016,
   title = {Precomputed {{Real-Time Texture Synthesis}} with {{Markovian Generative Adversarial Networks}}},
   booktitle = {Computer {{Vision}} – {{ECCV}} 2016},
@@ -999,6 +1059,33 @@
   eventtitle = {Smc 2000 Conference Proceedings. 2000 Ieee International Conference on Systems, Man and Cybernetics. 'cybernetics Evolving to Systems, Humans, Organizations, and Their Complex Interactions' (Cat. No.0},
   keywords = {Learning},
   file = {/home/julin/Zotero/storage/HQKMJ3VS/Miyazaki und Kobayashi - 2000 - Reinforcement learning for penalty avoiding policy.pdf;/home/julin/Zotero/storage/4CY3L2UQ/884990.html}
+}
+
+@article{mnihPlayingAtariDeep,
+  title = {Playing {{Atari}} with {{Deep Reinforcement Learning}}},
+  author = {Mnih, Volodymyr and Kavukcuoglu, Koray and Silver, David and Graves, Alex and Antonoglou, Ioannis and Wierstra, Daan and Riedmiller, Martin},
+  pages = {9},
+  abstract = {We present the first deep learning model to successfully learn control policies directly from high-dimensional sensory input using reinforcement learning. The model is a convolutional neural network, trained with a variant of Q-learning, whose input is raw pixels and whose output is a value function estimating future rewards. We apply our method to seven Atari 2600 games from the Arcade Learning Environment, with no adjustment of the architecture or learning algorithm. We find that it outperforms all previous approaches on six of the games and surpasses a human expert on three of them.},
+  langid = {english},
+  file = {/home/julin/Zotero/storage/6K8NN6CH/Mnih et al. - Playing Atari with Deep Reinforcement Learning.pdf}
+}
+
+@misc{mnihPlayingAtariDeep2013,
+  title = {Playing {{Atari}} with {{Deep Reinforcement Learning}}},
+  author = {Mnih, Volodymyr and Kavukcuoglu, Koray and Silver, David and Graves, Alex and Antonoglou, Ioannis and Wierstra, Daan and Riedmiller, Martin},
+  date = {2013-12-19},
+  number = {arXiv:1312.5602},
+  eprint = {1312.5602},
+  eprinttype = {arxiv},
+  primaryclass = {cs},
+  publisher = {{arXiv}},
+  doi = {10.48550/arXiv.1312.5602},
+  url = {http://arxiv.org/abs/1312.5602},
+  urldate = {2022-11-24},
+  abstract = {We present the first deep learning model to successfully learn control policies directly from high-dimensional sensory input using reinforcement learning. The model is a convolutional neural network, trained with a variant of Q-learning, whose input is raw pixels and whose output is a value function estimating future rewards. We apply our method to seven Atari 2600 games from the Arcade Learning Environment, with no adjustment of the architecture or learning algorithm. We find that it outperforms all previous approaches on six of the games and surpasses a human expert on three of them.},
+  archiveprefix = {arXiv},
+  keywords = {Computer Science - Machine Learning},
+  file = {/home/julin/Zotero/storage/9URX84BU/Mnih et al. - 2013 - Playing Atari with Deep Reinforcement Learning.pdf;/home/julin/Zotero/storage/7DS8KE9H/1312.html}
 }
 
 @misc{moerlandModelbasedReinforcementLearning2022,
@@ -1314,11 +1401,52 @@
   file = {/home/julin/Zotero/storage/DBAJ9JBP/the-bellman-equation-59258a0d3fa7.html}
 }
 
+@online{UniversalRobotsDH,
+  title = {Universal {{Robots}} - {{DH Parameters}} for Calculations of Kinematics and Dynamics},
+  url = {https://www.universal-robots.com/articles/ur/application-installation/dh-parameters-for-calculations-of-kinematics-and-dynamics/},
+  urldate = {2022-11-24},
+  file = {/home/julin/Zotero/storage/F8MYXFRE/dh-parameters-for-calculations-of-kinematics-and-dynamics.html}
+}
+
 @online{UniversalRobotsWhat,
   title = {Universal {{Robots}} - {{What}} Is a Singularity?},
   url = {https://www.universal-robots.com/articles/ur/application-installation/what-is-a-singularity/},
   urldate = {2022-11-14},
   file = {/home/julin/Zotero/storage/HTPJN5A6/what-is-a-singularity.html}
+}
+
+@misc{vanhasseltDeepReinforcementLearning2015,
+  title = {Deep {{Reinforcement Learning}} with {{Double Q-learning}}},
+  author = {van Hasselt, Hado and Guez, Arthur and Silver, David},
+  options = {useprefix=true},
+  date = {2015-12-08},
+  number = {arXiv:1509.06461},
+  eprint = {1509.06461},
+  eprinttype = {arxiv},
+  primaryclass = {cs},
+  publisher = {{arXiv}},
+  url = {http://arxiv.org/abs/1509.06461},
+  urldate = {2022-11-24},
+  abstract = {The popular Q-learning algorithm is known to overestimate action values under certain conditions. It was not previously known whether, in practice, such overestimations are common, whether they harm performance, and whether they can generally be prevented. In this paper, we answer all these questions affirmatively. In particular, we first show that the recent DQN algorithm, which combines Q-learning with a deep neural network, suffers from substantial overestimations in some games in the Atari 2600 domain. We then show that the idea behind the Double Q-learning algorithm, which was introduced in a tabular setting, can be generalized to work with large-scale function approximation. We propose a specific adaptation to the DQN algorithm and show that the resulting algorithm not only reduces the observed overestimations, as hypothesized, but that this also leads to much better performance on several games.},
+  archiveprefix = {arXiv},
+  keywords = {Computer Science - Machine Learning},
+  file = {/home/julin/Zotero/storage/RWPXN4WD/van Hasselt et al. - 2015 - Deep Reinforcement Learning with Double Q-learning.pdf;/home/julin/Zotero/storage/YSAAAUYX/1509.html}
+}
+
+@inproceedings{wangDuelingNetworkArchitectures2016,
+  title = {Dueling {{Network Architectures}} for {{Deep Reinforcement Learning}}},
+  booktitle = {Proceedings of {{The}} 33rd {{International Conference}} on {{Machine Learning}}},
+  author = {Wang, Ziyu and Schaul, Tom and Hessel, Matteo and Hasselt, Hado and Lanctot, Marc and Freitas, Nando},
+  date = {2016-06-11},
+  pages = {1995--2003},
+  publisher = {{PMLR}},
+  issn = {1938-7228},
+  url = {https://proceedings.mlr.press/v48/wangf16.html},
+  urldate = {2022-11-24},
+  abstract = {In recent years there have been many successes of using deep representations in reinforcement learning. Still, many of these applications use conventional architectures, such as convolutional networks, LSTMs, or auto-encoders. In this paper, we present a new neural network architecture for model-free reinforcement learning. Our dueling network represents two separate estimators: one for the state value function and one for the state-dependent action advantage function. The main benefit of this factoring is to generalize learning across actions without imposing any change to the underlying reinforcement learning algorithm. Our results show that this architecture leads to better policy evaluation in the presence of many similar-valued actions. Moreover, the dueling architecture enables our RL agent to outperform the state-of-the-art on the Atari 2600 domain.},
+  eventtitle = {International {{Conference}} on {{Machine Learning}}},
+  langid = {english},
+  file = {/home/julin/Zotero/storage/RTKZD9XM/Wang et al. - 2016 - Dueling Network Architectures for Deep Reinforceme.pdf}
 }
 
 @unpublished{wangESRGANEnhancedSuperResolution2018,
@@ -1430,6 +1558,30 @@
   abstract = {A collection of papers on the application of Markov decision processes is surveyed and classified according to the use of real life data, structural results and special computational schemes. Observations are made about various features of the applications.},
   keywords = {Applications,Markov Decision Processes},
   annotation = {\_eprint: https://doi.org/10.1057/jors.1993.181}
+}
+
+@online{yoonDoubleDeepNetworks2019,
+  title = {Double {{Deep Q Networks}}},
+  author = {Yoon, Chris},
+  date = {2019-07-17T16:29:45},
+  url = {https://towardsdatascience.com/double-deep-q-networks-905dd8325412},
+  urldate = {2022-11-24},
+  abstract = {Tackling maximization bias in Deep Q-learning},
+  langid = {english},
+  organization = {{Medium}},
+  file = {/home/julin/Zotero/storage/LGBCUYET/double-deep-q-networks-905dd8325412.html}
+}
+
+@online{yoonDuelingDeepNetworks2019,
+  title = {Dueling {{Deep Q Networks}}},
+  author = {Yoon, Chris},
+  date = {2019-10-20T03:25:20},
+  url = {https://towardsdatascience.com/dueling-deep-q-networks-81ffab672751},
+  urldate = {2022-11-24},
+  abstract = {Dueling Network Architectures for Deep Reinforcement Learning},
+  langid = {english},
+  organization = {{Medium}},
+  file = {/home/julin/Zotero/storage/86Q68MIF/dueling-deep-q-networks-81ffab672751.html}
 }
 
 @book{zhangDiveDeepLearning2020,
