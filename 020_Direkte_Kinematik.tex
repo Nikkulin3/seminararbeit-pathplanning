@@ -19,8 +19,8 @@ Die Konvention, die in der Regel verwendet wird, um Rotation und Translation ein
 Um nun ausgehend von Gelenk $n-1$ das Koordinatensystem von Gelenk $n$ zu beschreiben, müssen die folgenden Regeln befolgt werden:
 
 \begin{enumerate}
-    \item Achse $z_{n}$ liegt entlang der Bewegungsachse von Gelenk des Gelenks
-    \item Achse $x_{n}$ liegt auf der kürzesten Verbindung zwischen Achsen $z{n-1}$ und $z_{n}$.
+    \item Achse $z_{n}$ liegt entlang der Bewegungsachse des Gelenks $n$
+    \item Achse $x_{n}$ liegt auf der kürzesten Verbindung zwischen Achsen $z_{n-1}$ und $z_{n}$.
     \item Die $y_{n}$ Achse wird rechtshändig ergänzt.
 \end{enumerate}
 
@@ -42,65 +42,60 @@ Dies entspricht den folgenden Transformationsmatrizen (Gleichungen~\ref{eq:dh1},
 \newcommand{\sa}{\sin(\alpha_n)}
 
 \begin{equation}
-    \[
-        T_{\theta_n} =
-        \left[ {\begin{array}{cccc}
-                    \ct & -\st & 0 & 0 \\
-                    \st & \ct  & 0 & 0 \\
-                    0   & 0    & 1 & 0 \\
-                    0   & 0    & 0 & 1 \\
-        \end{array} } \right]
-    \]\label{eq:dh1}
+    T_{\theta_n} =
+    \begin{bmatrix}
+        \ct & -\st & 0 & 0 \\
+        \st & \ct  & 0 & 0 \\
+        0   & 0    & 1 & 0 \\
+        0   & 0    & 0 & 1 \\
+    \end{bmatrix}
+    \label{eq:dh1}
+\end{equation}
+\begin{equation}
+    T_{d_n} =
+    \begin{bmatrix}
+        1 & 0 & 0 & 0   \\
+        0 & 1 & 0 & 0   \\
+        0 & 0 & 1 & d_n \\
+        0 & 0 & 0 & 1   \\
+    \end{bmatrix}
+    \label{eq:dh2}
 \end{equation}
 
 \begin{equation}
-    \[
-        T_{d_n} =
-        \left[ {\begin{array}{cccc}
-                    1 & 0 & 0 & 0   \\
-                    0 & 1 & 0 & 0   \\
-                    0 & 0 & 1 & d_n \\
-                    0 & 0 & 0 & 1   \\
-        \end{array} } \right]
-    \]\label{eq:dh2}
+    T_{a_n} =
+    \begin{bmatrix}
+        1 & 0 & 0 & a_n \\
+        0 & 1 & 0 & 0   \\
+        0 & 0 & 1 & 0   \\
+        0 & 0 & 0 & 1   \\
+    \end{bmatrix}
+    \label{eq:dh3}
 \end{equation}
 
 \begin{equation}
-    \[
-        T_{a_n} =
-        \left[ {\begin{array}{cccc}
-                    1 & 0 & 0 & a_n \\
-                    0 & 1 & 0 & 0   \\
-                    0 & 0 & 1 & 0   \\
-                    0 & 0 & 0 & 1   \\
-        \end{array} } \right]
-    \]\label{eq:dh3}
-\end{equation}
-
-\begin{equation}
-    \[
-        T_{\alpha_n} =
-        \left[ {\begin{array}{cccc}
-                    1 & 0   & 0    & 0 \\
-                    0 & \ca & -\sa & 0 \\
-                    0 & \sa & \ca  & 0 \\
-                    0 & 0   & 0    & 1 \\
-        \end{array} } \right]
-    \]\label{eq:dh4}
+    T_{\alpha_n} =
+    \begin{bmatrix}
+        1 & 0   & 0    & 0 \\
+        0 & \ca & -\sa & 0 \\
+        0 & \sa & \ca  & 0 \\
+        0 & 0   & 0    & 1 \\
+    \end{bmatrix}
+    \label{eq:dh4}
 \end{equation}
 
 Um nun Koordinatensystem $n-1$ in Koordinatensystem $n$ zu überführen, kann die Transformationsmatrix $T_{n-1,n}$ verwendet werden (Gleichung~\ref{eq:dh5}).
+Für den beweglichen Freiheitsgrad der Gelenke kann für die einfache Berechnung noch eine Substitution für Variable $q_n$ durchgeführt werden (Gleichung~\ref{eq:subst1} für translatorische und Gleichung~\ref{eq:subst2} für rotatorische Gelenke).
 
 \begin{equation}
-    \[
-        T_{n-1,n} = T_{\theta_n} \cdot T_{d_n} \cdot T_{a_n} \cdot T_{\alpha_n} =
-        \left[ {\begin{array}{cccc}
-                    \ct & -\st\ca & \st\sa & a_n\ct \\
-                    \st & \ct\ca  & -ct\sa & a_n\st \\
-                    0   & \sa     & \ca    & d_n    \\
-                    0   & 0       & 0      & 1      \\
-        \end{array} } \right]
-    \]\label{eq:dh5}
+    T_{n-1,n}(q_n) \coloneqq T_{\theta_n} \cdot T_{d_n} \cdot T_{a_n} \cdot T_{\alpha_n} =
+    \begin{bmatrix}
+        \ct & -\st\ca & \st\sa & a_n\ct \\
+        \st & \ct\ca  & -ct\sa & a_n\st \\
+        0   & \sa     & \ca    & d_n    \\
+        0   & 0       & 0      & 1      \\
+    \end{bmatrix}
+    \label{eq:dh5}
 \end{equation}
 
 \begin{figure}[h]
@@ -108,6 +103,14 @@ Um nun Koordinatensystem $n-1$ in Koordinatensystem $n$ zu überführen, kann di
     \includegraphics[width = .5\textwidth]{Bilder/Denavit-Hartenberg-Transformation.svg}
     \caption{\ac{dhk} zwischen zwei Gelenken~\cite{jahobrCoordinateSystemsDenavitHartenberg2007}}\label{fig:dh-konvention1}
 \end{figure}
+
+
+\begin{equation}
+    d_n \coloneqq d_{n_0} + q_n    \label{eq:subst1}
+\end{equation}
+\begin{equation}
+    \theta_n \coloneqq \theta_{n_0} + q_n    \label{eq:subst2}
+\end{equation}
 
 
 \section{Unified Robot Description Format}\label{sec:urdf}
@@ -131,12 +134,15 @@ Desweiteren ist es möglich, Schnittstellen für die Bewegung der Motoren zu def
 ?? Quelle https://www.universal-robots.com/articles/ur/application-installation/dh-parameters-for-calculations-of-kinematics-and-dynamics/
 
 Der in dieser Arbeit betrachtete Roboter ist der UR5e von Universal Robots.
-Dieser ist ein vergleichsweise günstiger Roboter mit verringerter Zahl an Singularitäten (siehe Abschnitt~\ref{sec:singularitaten}).
+Dieser ist ein vergleichsweise günstiger Roboter mit verringerter Zahl an Singularitäten (siehe Abschnitt~\ref{sec:singularitaten}), sechs Gelenken und einer offenen kinematischen Kette.
 Offiziell wird der Roboter mit den DH-Parametern aus Tabelle~\ref{tab:ur5-dh1} und dynamischen Eigenschaften der Links aus Tabelle~\ref{tab:ur5-dh2} beschrieben.
+Abbildung~\ref{fig:ur5-axis} kann zudem die Dimensionierung des Roboters und die Anordnung der Achsen in Nullstellung entnommen werden.
 
-?? verweis auf anhang
-
-?? Bild ergänzen
+\begin{figure}[h]
+    \centering
+    \includegraphics[width = .9\textwidth]{Bilder/ur5-axis}
+    \caption{Achsen des UR5-Roboters mit Angabe der DH-Parameter (links) und Visualisierung der Nullposition (rechts)~\cite{rasmusandersenKinematicsUR52018}}\label{fig:ur5-axis}
+\end{figure}
 
 \begin{table}
     \centering
@@ -161,15 +167,14 @@ Offiziell wird der Roboter mit den DH-Parametern aus Tabelle~\ref{tab:ur5-dh1} u
         \toprule
         \textbf{Link} & \textbf{Masse [kg]} & \textbf{Schwerpunkt [m]} \\
         \midrule
-        Link 1        & 3.761              & [0, -0.02561, 0.00193]      \\
-        Link 2        & 8.058              & [0.2125, 0, 0.11336]        \\
-        Link 3        & 2.846              & [0.15, 0.0, 0.0265]         \\
-        Link 4        & 1.37               & [0, -0.0018, 0.01634]       \\
-        Link 5        & 1.3                & [0, 0.0018,0.01634]         \\
-        Link 6        & 0.365              & [0, 0, -0.001159]           \\
+        Link 1        & 3.761               & [0, -0.02561, 0.00193]   \\
+        Link 2        & 8.058               & [0.2125, 0, 0.11336]     \\
+        Link 3        & 2.846               & [0.15, 0.0, 0.0265]      \\
+        Link 4        & 1.37                & [0, -0.0018, 0.01634]    \\
+        Link 5        & 1.3                 & [0, 0.0018,0.01634]      \\
+        Link 6        & 0.365               & [0, 0, -0.001159]        \\
         \bottomrule
     \end{tabular}
     \caption{Beschreibung der dynamischen Eigenschaften des UR5e Roboters von Universal Robots~\cite{UniversalRobotsDH}}
     \label{tab:ur5-dh2}
 \end{table}
-
