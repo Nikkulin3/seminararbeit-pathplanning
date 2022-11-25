@@ -32,12 +32,13 @@ Dieser Trick ist allerdings im UR5 nicht verwendbar, da hier wohl aufgrund der g
 
 Dennoch kann durch eine Analyse der geometrischen Eigenschaften und der geringen Zahl der Singularitäten des UR5 eine Lösung von $\overrightarrow{q}$ bzw. $\overrightarrow{\theta}$ gefunden werden.
 Die Strategie hierbei ist, beim ersten Gelenk zu beginnen und nach und nach die anderen Gelenke mit der Transformation $T_{0,6}$ des Endeffektors zu verknüpfen.
-Bekannt sind zu Beginn der Rechnung nur die DH-Parameter $(\theta_i, a_i, d_i, \alpha_i)$ jedes Gelenks $i$ im Ausgangszustand, wobei $\theta$ als freie Variable jedes Gelenks betrachtet wird (Abschnitt~\ref{sec:ur5-in-dh}), sowie die Transformation des Endeffektors $T_{0,6}$ Eine detailliertere Rechnung kann~\cite{rasmusandersenKinematicsUR52018} und~\cite{hawkinsAnalyticInverseKinematics2013} entnommen werden.
+Bekannt sind zu Beginn der Rechnung nur die DH-Parameter $(\theta_i, a_i, d_i, \alpha_i)$ jedes Gelenks $i$ im Ausgangszustand, wobei $\theta_i$ als freie Variable jedes Gelenks betrachtet wird (Abschnitt~\ref{sec:ur5-in-dh}), sowie die Transformation des Endeffektors $T_{0,6}$.
+Eine detailliertere Rechnung kann~\cite{rasmusandersenKinematicsUR52018} und~\cite{hawkinsAnalyticInverseKinematics2013} entnommen werden.
 
-\subsubsection{1. Gelenk eins}
+\subsubsection{1. Gelenk eins (Basis)}
 
 Zunächst wird der Ausgangspunkt $P_{0,5}$ von Gelenk 5 berechnet (Gleichung~\ref{eq:inv1-1}~\cite[4]{rasmusandersenKinematicsUR52018}) und im Anschluss trigonometrisch Winkel $\theta_1$ bestimmt (Gleichung~\ref{eq:inv1-2} sowie Abbildung~\ref{fig:inv1-1}).
-Dabei enstehen zwei Lösungen, die die Schulter des Roboters entweder links oder Rechts vom Ursprung plazieren.
+Dabei enstehen zwei Lösungen, die die Schulter des Roboters entweder links oder Rechts vom Ursprung platzieren.
 
 \begin{equation}
     P_{0,5} = T_{0,6} \cdot
@@ -56,7 +57,7 @@ Dabei enstehen zwei Lösungen, die die Schulter des Roboters entweder links oder
     \caption{Berechnung von $\theta_1$, Betrachtung von Gelenk eins bis fünf~\cite{rasmusandersenKinematicsUR52018}}\label{fig:inv1-1}
 \end{figure}
 
-\subsubsection{2. Gelenk fünf}
+\subsubsection{2. Gelenk fünf (oberes Handgelenk)}
 
 Im Anschluss kann $\theta_5$ bestimmt werden, da der y-Teil der Position von Gelenk 6 relativ zu Gelenk 1 ($P_{1,6y}$) nur mithilfe von $\theta_5$ und bereits bekannter Parameter $P_{0,6}$, $\theta_1$ und der DH-Parameter berechnet werden kann (siehe Abbildung~\ref{fig:inv1-2}).
 Aus dieser Erkenntnis ergibt sich Gleichung~\ref{eq:inv2-1}
@@ -81,7 +82,7 @@ Dabei entstehen wiederum zwei Lösungen, die jeweils das Handgelenk ober- oder u
     \caption{Berechnung von $\theta_5$, Betrachtung von allen Gelenken~\cite{rasmusandersenKinematicsUR52018}}\label{fig:inv1-2}
 \end{figure}
 
-\subsubsection{3. Gelenk sechs}
+\subsubsection{3. Gelenk sechs (Endeffektor)}
 
 Nach $\theta_1$ und $\theta_5$ wird $\theta_6$ bestimmt.
 Dazu wird die Eigenschaft des UR5 herangezogen, die Z-Achsen von Gelenken zwei, drei und vier liegt stets parallel zur Y-Achse von Gelenk 1 stehen (siehe Abbildung~\ref{fig:ur5-axis}).
@@ -95,7 +96,7 @@ Dies tritt auf, wenn neben den Achsen $z_2$, $z_3$ und $z_4$ auch Achse $z_6$ pa
 \begin{figure}[h]
     \centering
     \includegraphics[width = .4\textwidth]{Bilder/inv3}
-    \caption{Berechnung von $\theta_6$ mit Sphärischen Koordinaten (links), relevante Koordinatensysteme in der Berechnung (rechts)}\label{fig:inv1-3}
+    \caption{Berechnung von $\theta_6$ mit Sphärischen Koordinaten, für Koordinatensystembeschreibung siehe Abbildung~\ref{fig:ur5-axis}}\label{fig:inv1-3}
 \end{figure}
 \begin{equation}
     Y_{6,1}=
@@ -125,11 +126,35 @@ Dies tritt auf, wenn neben den Achsen $z_2$, $z_3$ und $z_4$ auch Achse $z_6$ pa
     \label{eq:inv3-3}
 \end{equation}
 
-\subsubsection{4. Gelenk drei}
+\subsubsection{4. Gelenk drei (Ellenbogen)}
 
-\subsubsection{5. Gelenk zwei}
+\subsubsection{5. Gelenk zwei (Schulter)}
 
-\subsubsection{6. Gelenk vier}
+\subsubsection{6. Gelenk vier (unteres Handgelenk)}
+
+\subsubsection{Zusammenfassung}
+
+\begin{equation}
+    \overrightarrow{\theta} =
+    \begin{bmatrix}
+        \arctantwo(P_{0,5y}, P_{0}) \pm \arccos \left( \frac{d_4}{ \sqrt{ P_{0,5x}^2 + P_{0,5y}^2 }  } \right) + \frac{\pi}{2} \\
+        xx                                                                                                                   \\
+        xx                                                                                                                   \\
+        xx                                                                                                                   \\
+        \pm \arccos \left( \frac{ P_{0,6x} \cdot \sin\theta_1 - P_{0,6y} \cdot \cos\theta_1 - d_4 }{ d_6 } \right) \\
+        \arctantwo\left(
+        \frac{
+            -X_{6,0y} \cdot \sin\theta_1 + Y_{6,0y} \cdot \cos\theta_1
+        }{
+            \sin\theta_5
+        },
+        \frac{
+            X_{6,0x} \cdot \sin\theta_1 - Y_{6,0x} \cdot \cos\theta_1
+        }{
+            \sin\theta_5
+        }\right)
+    \end{bmatrix}\label{eq:inv-zusammenfassung}
+\end{equation}
 
 
 \section{Singularitäten}\label{sec:singularitaten}
