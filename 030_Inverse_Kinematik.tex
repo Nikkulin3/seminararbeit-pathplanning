@@ -128,32 +128,95 @@ Dies tritt auf, wenn neben den Achsen $z_2$, $z_3$ und $z_4$ auch Achse $z_6$ pa
 
 \subsubsection{4. Gelenk drei (Ellenbogen)}
 
+Die verbleibenden drei Gelenke haben alle parallele Achsen und lassen sich dadurch zu einem zweidimensionalen System vereinfachen (siehe Abbildung~\ref{fig:inv1-4}, rechts).
+Um $\theta_3$ zu berechnen kann der Winkel $\phi_3$ zu Hilfe genommen werden (siehe Gleichung~\ref{eq:inv4-1}).
+Die Werte $a_2$, $a_3$ sind dabei die DH-Parameter der jeweiligen Gelenke und $\lvert P_{1,4xz} \rvert$ ist der Abstand zwischen Gelenk 1 und Gelenk 4, dessen relative Position bereits bekannt ist.
+Aufgrund der Geometrie gilt: $\lvert P_{1,4xz} \rvert \in \lvert a_2 \pm a_3 \rvert$
+Nach der Anwendung des $\arccos$ erhält man in der Regel zwei Lösungen, die der Position \enquote{Elbow Up} und \enquote{Elbow Down} entsprechen (Gleichung~\ref{eq:inv4-2}).
+\begin{equation}
+    \cos(\theta_3) = -cos(\phi_3) = \frac{a_2^2 + a_3^2 - \lvert P_{1,4xz}^2 \rvert}{2 a_2 a_3}   \label{eq:inv4-1}
+\end{equation}
+\begin{equation}
+    \theta_3 = \pm \arccos \left(  \frac{a_2^2 + a_3^2 - \lvert P_{1,4xz}^2 \rvert}{2 a_2 a_3} \right)  \label{eq:inv4-2}
+\end{equation}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width = .8\textwidth]{Bilder/inv4}
+    \caption{Berechnung von $\theta_4$ durch Vereinfachung als zweidimensionales System und Bestimmung der Transformation zwischen Gelenk 1 und Gelenk 4.}\label{fig:inv1-4}
+\end{figure}
+
 \subsubsection{5. Gelenk zwei (Schulter)}
+
+$\theta_2$ kann mithilfe von Abbildung~\ref{fig:inv1-4} ($\theta_2 = \phi_1 - \phi_2$), sowie Gleichung~\ref{eq:inv5-2} und ~\ref{eq:inv5-3} bestimmt werden.
+Nach der Substitution von $\phi_3 = \sin(\pi-\theta_3) = \sin(\theta_3)$ erhält man eine Lösung für $\theta_2$ (Gleichung~\ref{eq:inv5-4}).
+%\begin{equation}
+%    \label{eq:inv5-1}
+%\end{equation}
+\begin{equation}
+    \phi_1 = \arctantwo(-P_{1,4_z}, -P_{1,4x}) \label{eq:inv5-2}
+\end{equation}
+\begin{equation}
+    \phi_2 = \arcsin\left( \frac{-a_3\cdot \sin \phi_3}{\lvert P_{1,4xz}\rvert} \right) \label{eq:inv5-3}
+\end{equation}
+\begin{equation}
+    \theta_2 = \phi_1 - \phi_2 =
+    \arctantwo(-P_{1,4_z}, -P_{1,4x}) -
+    \arcsin\left( \frac{-a_3\cdot \sin \theta_3}{\lvert P_{1,4xz}\rvert} \right)
+    \label{eq:inv5-4}
+\end{equation}
 
 \subsubsection{6. Gelenk vier (unteres Handgelenk)}
 
-\subsubsection{Zusammenfassung}
+Der Winkel des letzten Gelenks ist definiert als der Winkel zwischen den Achsen $x_3$ und $x_4$ um Rotationsachse $z_4$ (siehe Definition DH-Parameter, Abschnitt~\ref{sec:dh-konvention}).
+Da alle anderen Winkel bereits bekannt sind, kann der letzte Winkel der ersten Spalte $X_{3,4}$ der Transformationsmatrix $T_{3,4}$ entnommen werden.
+Mit den ersten beiden Werten dieser Spalte, $X_{3,4x}$ und $X_{3,4y}$, erhält man den Wert von $\theta_4$ (Gleichung~\ref{eq:inv6-1})
 
 \begin{equation}
-    \overrightarrow{\theta} =
-    \begin{bmatrix}
-        \arctantwo(P_{0,5y}, P_{0}) \pm \arccos \left( \frac{d_4}{ \sqrt{ P_{0,5x}^2 + P_{0,5y}^2 }  } \right) + \frac{\pi}{2} \\
-        xx                                                                                                                   \\
-        xx                                                                                                                   \\
-        xx                                                                                                                   \\
-        \pm \arccos \left( \frac{ P_{0,6x} \cdot \sin\theta_1 - P_{0,6y} \cdot \cos\theta_1 - d_4 }{ d_6 } \right) \\
-        \arctantwo\left(
-        \frac{
-            -X_{6,0y} \cdot \sin\theta_1 + Y_{6,0y} \cdot \cos\theta_1
-        }{
-            \sin\theta_5
-        },
-        \frac{
-            X_{6,0x} \cdot \sin\theta_1 - Y_{6,0x} \cdot \cos\theta_1
-        }{
-            \sin\theta_5
-        }\right)
-    \end{bmatrix}\label{eq:inv-zusammenfassung}
+    \theta_4 = \arctantwo\left( X_{3,4y}, X_{3,4x} \right)    \label{eq:inv6-1}
+\end{equation}
+
+\subsubsection{Zusammenfassung}
+
+Mithilfe der Gleichungen~\ref{eq:inv7-1} bis~\ref{eq:inv7-6} kann die Inverse Kinematik eines UR5-Roboters direkt bestimmt werden.
+Dabei existieren acht Lösungen, jeweils eine für die Gelenke sechs (Endeffektor), zwei (Schulter) und vier (unteres Handgelenk) und jeweils zwei für die Gelenke eins (Basis), drei (Ellenbogen) und fünf (oberes Handgelenk).
+Neben den DH-Parametern und der gewünschten Transformation des Endeffektors muss für Gleichung~\ref{eq:inv7-1} $P_{0,5}$ (siehe Gleichung~\ref{fig:inv1-1}), für Gleichung~\ref{eq:inv7-3} die Einheitsvektoren $X_{6,0x}$, $X_{6,0y}$ und $Y_{6,0x}$ $Y_{6,0x}$, für Gleichung~\ref{eq:inv7-4} und~\ref{eq:inv7-4} die x- und y-Werte des Vektors $P_{1,4}$ und für Gleichung~\ref{eq:inv7-6} die Werte $(1,1)$ und $(2,1)$ der Transformationsmatrix $T_{3,4}$ bestimmt werden.
+
+\begin{equation}
+    \theta_1 = \arctantwo(P_{0,5y}, P_{0}) \pm \arccos \left( \frac{d_4}{ \sqrt{ P_{0,5x}^2 + P_{0,5y}^2 }  } \right) + \frac{\pi}{2}
+    \label{eq:inv7-1}
+\end{equation}
+\begin{equation}
+    \theta_5 = \pm \arccos \left( \frac{ P_{0,6x} \cdot \sin\theta_1 - P_{0,6y} \cdot \cos\theta_1 - d_4 }{ d_6 } \right)
+    \label{eq:inv7-2}
+\end{equation}
+\begin{equation}
+    \theta_6 =
+    \arctantwo\left(
+    \frac{
+        -X_{6,0y} \cdot \sin\theta_1 + Y_{6,0y} \cdot \cos\theta_1
+    }{
+        \sin\theta_5
+    },
+    \frac{
+        X_{6,0x} \cdot \sin\theta_1 - Y_{6,0x} \cdot \cos\theta_1
+    }{
+        \sin\theta_5
+    }\right)
+    \label{eq:inv7-3}
+\end{equation}
+\begin{equation}
+    \theta_3 = \pm \arccos \left(  \frac{a_2^2 + a_3^2 - \lvert P_{1,4xz}^2 \rvert}{2 a_2 a_3} \right)
+    \label{eq:inv7-4}
+\end{equation}
+\begin{equation}
+    \theta_2 = \phi_1 - \phi_2 =
+    \arctantwo(-P_{1,4_z}, -P_{1,4x}) -
+    \arcsin\left( \frac{-a_3\cdot \sin \theta_3}{\lvert P_{1,4xz}\rvert} \right)
+    \label{eq:inv7-5}
+\end{equation}
+\begin{equation}
+    \theta_4 = \arctantwo\left( X_{3,4y}, X_{3,4x} \right)
+    \label{eq:inv7-6}
 \end{equation}
 
 

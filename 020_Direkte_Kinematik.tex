@@ -90,13 +90,15 @@ Für den beweglichen Freiheitsgrad der Gelenke kann für die einfache Berechnung
 \begin{equation}
     T_{n-1,n}(q_n) \coloneqq T_{\theta_n} \cdot T_{d_n} \cdot T_{a_n} \cdot T_{\alpha_n} =
     \begin{bmatrix}
-        \ct & -\st\ca & \st\sa & a_n\ct \\
-        \st & \ct\ca  & -ct\sa & a_n\st \\
-        0   & \sa     & \ca    & d_n    \\
-        0   & 0       & 0      & 1      \\
+        \ct & -\st\ca & \st\sa  & a_n\ct \\
+        \st & \ct\ca  & -\ct\sa & a_n\st \\
+        0   & \sa     & \ca     & d_n    \\
+        0   & 0       & 0       & 1      \\
     \end{bmatrix}
     \label{eq:dh5}
 \end{equation}
+
+?? Modifizierte dh-parameter, andere Matrix (siehe andersen~\cite{rasmusandersenKinematicsUR52018})
 
 \begin{figure}[h]
     \centering
