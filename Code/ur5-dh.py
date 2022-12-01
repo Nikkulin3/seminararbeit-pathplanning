@@ -280,15 +280,16 @@ class UR5:
         zs = [z]
         ys = [y]
         xs = [x]
-        print("-----------ROBOT-DH---------")
+        print("------VISUALIZING-DH--------")
         for i, j in enumerate(self.joints):
-            alpha, theta = np.rad2deg((j.alpha, j.theta))
+            alpha, theta = np.round(np.rad2deg((j.alpha, j.theta)), 1)
             print(f"JOINT {i + 1}: d={j.d}, a={j.a}, {alpha=}, {theta=}")
             absolute_tf = j.abs_tf
             xs.append(Arrow(*j.transform_vector((amplitude, 0, 0), absolute_tf), c="red"))
             ys.append(Arrow(*j.transform_vector((0, amplitude, 0), absolute_tf), c="green"))
             zs.append(Arrow(*j.transform_vector((0, 0, amplitude), absolute_tf), c="blue"))
         lines = [Line(a.pos(), b.pos()) for a, b in zip(zs, zs[1:])]
+        print("----------------------------")
         return xs + ys + zs, lines
 
     def get_joint_angles(self):
@@ -303,6 +304,7 @@ def main2():
     for solution in solutions:
         diff = np.linalg.norm(np.array(solution) - thetas)
         if diff < 1e-6:
+            print("Direct and inverse kinematics are matching!")
             break
     else:
         raise AssertionError("Direct and inverse kinematics conflicting!")
