@@ -230,7 +230,6 @@ class UR5:
                                      rad=True):  # target tf relative to Joint zero transform of robot
         d1, d2, d3, d4, d5, d6 = [self.joints[i].d for i in range(6)]
         a1, a2, a3, a4, a5, a6 = [self.joints[i].a for i in range(6)]
-        p_06 = target_tf.transl()
         inverted_target_tf = ~target_tf
 
         solutions = []
@@ -308,8 +307,7 @@ def main2():
     else:
         raise AssertionError("Direct and inverse kinematics conflicting!")
 
-    vedo.show(Sphere(r=.01).wireframe(), robot.vedo_elements(), axes=1,
-              interactive=True)
+    vedo.show(Sphere(r=.01), robot.vedo_elements(), axes=1, interactive=True)
 
 
 if __name__ == '__main__':
