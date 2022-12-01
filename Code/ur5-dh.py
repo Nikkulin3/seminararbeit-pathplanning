@@ -116,6 +116,67 @@ class UR5:
             prev = j
         print(f"Successfully moved robot to position theta={np.round(np.rad2deg(self.get_joint_angles()), 0)}")
 
+    def calculate_inverse_kinematics(self, target_tf):  # target tf relative to Joint zero transform of robot
+        d1, d2, d3, d4, d5, d6 = [self.joints[i].d for i in range(6)]
+        a1, a2, a3, a4, a5, a6 = [self.joints[i].a for i in range(6)]
+        p_06x, p_06y, p_06z = target_tf[:-1, 3]
+        sin, cos = np.sin, np.cos
+        inverted_target_tf = np.linalg.inv(target_tf)
+
+        # theta 1
+        p_05 = np.matmul(target_tf, [0, 0, -d6, 1])
+        p_05x, p_05y, _, _ = p_05
+        theta_1 = [
+            np.arctan2(p_05y, p_05x) + sgn * (np.arccos(d4 / np.linalg.norm((p_05x, p_05y))) + np.pi / 2)
+            for sgn in [-1, 1]
+        ]
+
+        print(f"theta_1={np.rad2deg(theta_1)} (0.)")
+
+        theta_1 = theta_1[-1]  # todo multiple thetas
+
+        # theta_5
+        theta_5 = [
+            sgn * (
+                np.arccos((p_06x * sin(theta_1) - p_06y * cos(theta_1) - d4) / d6)
+            )
+            for sgn in [-1, 1]
+        ]
+        print(f"theta_5={np.rad2deg(theta_5)} (0.)")
+
+        theta_5 = theta_5[-1]
+
+        # theta_6
+
+        x_60x, x_60y = inverted_target_tf[:2, 0]
+        y_60x, y_60y = inverted_target_tf[:2, 1]
+
+        numerator1 = -x_60y * sin(theta_1) + y_60y * cos(theta_1)
+        numerator2 = x_60x * sin(theta_1) - y_60x * cos(theta_1)
+        denominator = sin(theta_5)
+
+        if denominator == 0:
+            theta_6 = 0  # any angle
+        else:
+            theta_6 = np.arctan2(numerator1 / denominator, numerator2 / denominator)
+
+        print(f"theta_6={np.rad2deg(theta_6)} (any)")
+
+        # theta_3
+
+        # T_01 =
+        # T_45 =
+        # T_56 =
+        #
+        # -> p_14
+
+        theta_3 = [
+            sgn * np.arccos(
+                (np.linalg.norm(p_14xz) ** 2 - a2 ** 2 - a3 ** 2) / (2 * a2 * a3)
+            )
+            for sgn in [-1, 1]
+        ]
+
     def vedo_elements(self):
         amplitude = .05
         x = Arrow((0, 0, 0), (amplitude, 0, 0)).c("red")
@@ -143,6 +204,10 @@ def main2():
     robot = UR5()
     robot.set_joint_angles(0, -90, 90, 0, 0, 0)
     elms = robot.vedo_elements()
+
+    print(robot.joints[-1].abs_tf)
+
+    robot.calculate_inverse_kinematics(robot.joints[-1].abs_tf)
 
     # robot2 = UR5()
     # robot2.set_joint_angles(0, -90, 90, 0, 0, 0)

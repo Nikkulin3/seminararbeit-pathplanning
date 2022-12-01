@@ -43,12 +43,12 @@ Dabei enstehen zwei Lösungen, die die Schulter des Roboters entweder links oder
 \begin{equation}
     P_{0,5} = T_{0,6} \cdot
     \begin{bmatrix}
-        0 \\ 0 \\ -d_6 \\ 0
+        0 \\ 0 \\ -d_6 \\ 1
     \end{bmatrix}
     \label{eq:inv1-1}
 \end{equation}
 \begin{equation}
-    \theta_1 = \arctantwo(P_{0,5y}, P_{0}) \pm \arccos \left( \frac{d_4}{ \sqrt{ P_{0,5x}^2 + P_{0,5y}^2 }  } \right) + \frac{\pi}{2}
+    \theta_1 = \arctantwo(P_{0,5y}, P_{0,5x}) \pm \arccos \left( \frac{d_4}{ \sqrt{ P_{0,5x}^2 + P_{0,5y}^2 }  } \right) + \frac{\pi}{2}
     \label{eq:inv1-2}
 \end{equation}
 \begin{figure}[h]
@@ -182,7 +182,7 @@ Dabei existieren acht Lösungen, jeweils eine für die Gelenke sechs (Endeffekto
 Neben den DH-Parametern und der gewünschten Transformation des Endeffektors muss für Gleichung~\ref{eq:inv7-1} $P_{0,5}$ (siehe Gleichung~\ref{fig:inv1-1}), für Gleichung~\ref{eq:inv7-3} die Einheitsvektoren $X_{6,0x}$, $X_{6,0y}$ und $Y_{6,0x}$ $Y_{6,0x}$, für Gleichung~\ref{eq:inv7-4} und~\ref{eq:inv7-4} die x- und y-Werte des Vektors $P_{1,4}$ und für Gleichung~\ref{eq:inv7-6} die Werte $(1,1)$ und $(2,1)$ der Transformationsmatrix $T_{3,4}$ bestimmt werden.
 
 \begin{equation}
-    \theta_1 = \arctantwo(P_{0,5y}, P_{0}) \pm \arccos \left( \frac{d_4}{ \sqrt{ P_{0,5x}^2 + P_{0,5y}^2 }  } \right) + \frac{\pi}{2}
+    \theta_1 = \arctantwo(P_{0,5y}, P_{0,5x}) \pm \arccos \left( \frac{d_4}{ \sqrt{ P_{0,5x}^2 + P_{0,5y}^2 }  } \right) + \frac{\pi}{2}
     \label{eq:inv7-1}
 \end{equation}
 \begin{equation}
