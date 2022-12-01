@@ -65,6 +65,7 @@ class Joint:
 
     def move_to(self, theta):
         self.tf = self.__get_tf(theta)
+        return self
 
     def set_abs_tf(self, prev_tf):
         self.abs_tf = np.matmul(prev_tf, self.tf)
@@ -73,6 +74,9 @@ class Joint:
     def transform_vector(self, vec, tf=None):
         tf = self.tf if tf is None else tf
         return tf[:3, 3], np.matmul(tf, [x for x in vec] + [1])[:-1]
+
+    def get_pos(self):
+        return self.abs_tf[:-1, 3]
 
 
 # def rot_matrix_to_axis_angle(m):
@@ -117,23 +121,36 @@ class UR5:
         print(f"Successfully moved robot to position theta={np.round(np.rad2deg(self.get_joint_angles()), 0)}")
 
     def calculate_inverse_kinematics(self, target_tf):  # target tf relative to Joint zero transform of robot
+
+        print("POSITIONS")
+        positions_org = [j.get_pos() for j in self.joints]
+        tf_org = [j.tf for j in self.joints]
+        tf_abs_org = [j.abs_tf for j in self.joints]
+        for j in self.joints:
+            print(j.get_pos())
+        print("----")
         d1, d2, d3, d4, d5, d6 = [self.joints[i].d for i in range(6)]
         a1, a2, a3, a4, a5, a6 = [self.joints[i].a for i in range(6)]
-        p_06x, p_06y, p_06z = target_tf[:-1, 3]
+        # tf01, tf12, tf23, tf34, tf45, tf56 = [None for _ in range(6)]
+        p_06 = target_tf[:, 3]
+        p_06x, p_06y, p_06z, _ = p_06
         sin, cos = np.sin, np.cos
         inverted_target_tf = np.linalg.inv(target_tf)
 
         # theta 1
-        p_05 = np.matmul(target_tf, [0, 0, -d6, 1])
-        p_05x, p_05y, _, _ = p_05
+        p05 = np.matmul(target_tf, [0, 0, -d6, 1])
+        p05x, p05y, _, _ = p05
         theta_1 = [
-            np.arctan2(p_05y, p_05x) + sgn * (np.arccos(d4 / np.linalg.norm((p_05x, p_05y))) + np.pi / 2)
+            np.arctan2(p05y, p05x) + sgn * (np.arccos(d4 / np.linalg.norm((p05x, p05y))) + np.pi / 2)
             for sgn in [-1, 1]
         ]
 
         print(f"theta_1={np.rad2deg(theta_1)} (0.)")
 
         theta_1 = theta_1[-1]  # todo multiple thetas
+        org_tf = self.joints[0].tf
+        tf01 = self.joints[0].move_to(theta_1).tf
+        print(np.linalg.norm(tf01 - org_tf))
 
         # theta_5
         theta_5 = [
@@ -145,6 +162,9 @@ class UR5:
         print(f"theta_5={np.rad2deg(theta_5)} (0.)")
 
         theta_5 = theta_5[-1]
+        org_tf = self.joints[4].tf
+        tf45 = self.joints[4].move_to(theta_5).tf
+        print(np.linalg.norm(tf45 - org_tf))
 
         # theta_6
 
@@ -160,22 +180,32 @@ class UR5:
         else:
             theta_6 = np.arctan2(numerator1 / denominator, numerator2 / denominator)
 
+        theta_6 = 0
+        org_tf = self.joints[5].tf
+        tf56 = self.joints[5].move_to(theta_6).tf
+
         print(f"theta_6={np.rad2deg(theta_6)} (any)")
+        print(np.linalg.norm(tf56 - org_tf))
 
         # theta_3
-
-        # T_01 =
-        # T_45 =
-        # T_56 =
-        #
-        # -> p_14
+        tf06 = target_tf
+        tf16 = np.matmul(np.linalg.inv(tf01), tf06)
+        tf46 = np.matmul(tf45, tf56)
+        tf64 = np.linalg.inv(tf46)
+        tf14 = np.matmul(tf16, tf64)
+        p14 = tf14[:3, 3]
+        p14x, _, p14z = p14
 
         theta_3 = [
             sgn * np.arccos(
-                (np.linalg.norm(p_14xz) ** 2 - a2 ** 2 - a3 ** 2) / (2 * a2 * a3)
+                (np.linalg.norm((p14x, p14z)) ** 2 - a2 ** 2 - a3 ** 2) / (2 * a2 * a3)
             )
             for sgn in [-1, 1]
         ]
+
+        print(f"theta_3={np.rad2deg(theta_3)} (90)")
+
+        pass
 
     def vedo_elements(self):
         amplitude = .05
