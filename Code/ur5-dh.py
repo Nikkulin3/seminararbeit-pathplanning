@@ -146,7 +146,10 @@ class UR5:
 
     def set_joint_angles(self, *thetas, rad=True):
         prev: Optional[Joint] = None
-        assert len(thetas) == 6, "number of joint angles supplied must be 6"
+        assert len(thetas) == 6 or (
+                len(thetas) == 1 and len(thetas[0]) == 6), "number of joint angles supplied must be 6"
+        if len(thetas) == 1:
+            thetas = thetas[0]
         if not rad:
             thetas = np.deg2rad(thetas)
         for j, theta in zip(self.joints, thetas):
@@ -288,7 +291,7 @@ class UR5:
             xs.append(Arrow(*j.transform_vector((amplitude, 0, 0), absolute_tf), c="red"))
             ys.append(Arrow(*j.transform_vector((0, amplitude, 0), absolute_tf), c="green"))
             zs.append(Arrow(*j.transform_vector((0, 0, amplitude), absolute_tf), c="blue"))
-        lines = [Line(a.pos(), b.pos()) for a, b in zip(zs, zs[1:])]
+        lines = [Line(a.pos(), b.pos(), c=tuple(np.random.random(3)), lw=5) for a, b in zip(zs, zs[1:])]
         print("----------------------------")
         return xs + ys + zs, lines
 
@@ -309,7 +312,12 @@ def main2():
     else:
         raise AssertionError("Direct and inverse kinematics conflicting!")
 
-    vedo.show(Sphere(r=.01), robot.vedo_elements(), axes=1, interactive=True)
+    clones = []
+    for solution in solutions:
+        robot_cpy = UR5()
+        robot_cpy.set_joint_angles(solution, rad=False)
+        clones.append(robot_cpy.vedo_elements())
+    vedo.show(Sphere(r=.01), clones, axes=1, interactive=True)
 
 
 if __name__ == '__main__':
