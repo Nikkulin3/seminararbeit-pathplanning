@@ -159,7 +159,7 @@ class UR5:
             else:
                 j.set_abs_tf(T(prev.abs_tf))
             prev = j
-        print(f"Successfully moved robot to position theta={np.round(np.rad2deg(self.get_joint_angles()), 0)}")
+        # print(f"Successfully moved robot to position theta={np.round(np.rad2deg(self.get_joint_angles()), 0)}")
 
     @staticmethod
     def __theta_1(target_tf, d4, d6):
@@ -265,12 +265,12 @@ class UR5:
                         continue
                     solutions.append([theta_1, theta_2, theta_3, theta_4, theta_5, theta_6])
                     if return_one_solution:
-                        print(f"found first solution (others skipped): {np.round(np.rad2deg(solutions[0]))}")
+                        # print(f"found first solution (others skipped): {np.round(np.rad2deg(solutions[0]))}")
                         if not rad:
                             solutions = np.rad2deg(solutions)
                         return solutions[0]
 
-        print(f"found {len(solutions)} solutions:\n{np.round(np.rad2deg(solutions))}")
+        # print(f"found {len(solutions)} solutions:\n{np.round(np.rad2deg(solutions))}")
         if not rad:
             solutions = np.rad2deg(solutions)
         return solutions
@@ -283,16 +283,16 @@ class UR5:
         zs = [z]
         ys = [y]
         xs = [x]
-        print("------VISUALIZING-DH--------")
+        # print("------VISUALIZING-DH--------")
         for i, j in enumerate(self.joints):
-            alpha, theta = np.round(np.rad2deg((j.alpha, j.theta)), 1)
-            print(f"JOINT {i + 1}: d={j.d}, a={j.a}, {alpha=}, {theta=}")
+            #     alpha, theta = np.round(np.rad2deg((j.alpha, j.theta)), 1)
+            #     print(f"JOINT {i + 1}: d={j.d}, a={j.a}, {alpha=}, {theta=}")
             absolute_tf = j.abs_tf
             xs.append(Arrow(*j.transform_vector((amplitude, 0, 0), absolute_tf), c="red"))
             ys.append(Arrow(*j.transform_vector((0, amplitude, 0), absolute_tf), c="green"))
             zs.append(Arrow(*j.transform_vector((0, 0, amplitude), absolute_tf), c="blue"))
+        # print("----------------------------")
         lines = [Line(a.pos(), b.pos(), c=tuple(np.random.random(3)), lw=5) for a, b in zip(zs, zs[1:])]
-        print("----------------------------")
         return xs + ys + zs, lines
 
     def get_joint_angles(self):
@@ -303,8 +303,9 @@ def main2():
     robot = UR5()
     thetas = (10, -90, 90, 20, 40, 10)
     robot.set_joint_angles(*thetas, rad=False)
+    print(f"Direct kinematics to: {np.round(thetas, 1)}")
     solutions = robot.calculate_inverse_kinematics(robot.joints[-1].abs_tf, rad=False)
-    for solution in solutions:
+    for i, solution in enumerate(solutions):
         diff = np.linalg.norm(np.array(solution) - thetas)
         if diff < 1e-6:
             print("Direct and inverse kinematics are matching!")
@@ -313,8 +314,9 @@ def main2():
         raise AssertionError("Direct and inverse kinematics conflicting!")
 
     clones = []
-    for solution in solutions:
+    for i, solution in enumerate(solutions):
         robot_cpy = UR5()
+        print(f"solution {i + 1}: {np.round(solution, 1)}")
         robot_cpy.set_joint_angles(solution, rad=False)
         clones.append(robot_cpy.vedo_elements())
     vedo.show(Sphere(r=.01), clones, axes=1, interactive=True)
