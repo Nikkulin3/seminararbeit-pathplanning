@@ -1,15 +1,44 @@
 \cleardoublepage
-\chapter{Pfadplanung}
 
-\section{Formale Beschreibung}
 
-\section{Konfigurationsraum}
+\chapter{Pfadplanung}\label{ch:pfadplanung}
 
-Konfigurationsraum und Kollisionsfreier Konfigurationsraum
+Bei der Pfadplanung geht es darum, eine Reihe an Konfigurationen zu berechnen, die den Weg von einer bestimmten Transformation in eine andere beschreiben.
+Eine einzelne Konfiguration ist im Falle des UR5 ein Tupel mit sechs Winkeln, die die Ausrichtung der sechs Gelenke des Roboters beschreiben.
+
+Die einfachste Form der Pfadplanung ist der kürzeste Weg zwischen zwei Punkten (Abschnitt~\ref{subsec:kurzester-weg}), die schnellste Verbindung ist immer der Weg der direkten Kinematik mit maximaler Winkelgeschwindigkeit bei der Bewegung (Abschnitt~\ref{ch:direkte-kinematik}).
+Komplizierter wird es, wenn Beschränkungen im Arbeitsraum des Roboters, wie Kollisionen mit der Umgebung oder mit sich selbst, vorliegen.
+In diesem Fall muss ein komplizierteres Berechnungsverfahren herangezogen werden.
+
+In diesem Kapitel sollen die Grundlagen der Pfadplanung, sowie einige Algorithmen näher vorgestellt werden.
+
+
+\section{Konfigurationsraum}\label{sec:konfigurationsraum}
+
+
+Der Konfigurationsraum $\mathit{C}$ stellt die Grundlage für die Algorithmen in der Pfadplanung dar und beschreibt alle möglichen Konfigurationen, die der Roboter einnehmen kann.
+Eine Konfiguration des UR5 ist dabei wie in Gleichung~\ref{eq:config-1} definiert, wobei die Winkelwerte $\theta_i$ durch ihre Maximal- und Minimalwerte des Datenblatts~\cite{universalrobotsUR5TechnicalSpecifications} von $\pm 360^{\circ}$ beschränkt sind.
+Gleichsam existieren Konfigurationen innerhalb dieser Menge $\mathit{O}\in\mathit{C}$, die Kollisionen beschreiben.
+Darunter zählen Konfigurationen, bei denen sich der Roboter selbst im Weg steht, sowie welche, bei denen der Untergrund oder statische Hindernisse eine erfolgreiche Ausführung der Bewegung verhindern.
+Der für die Pfadplanung relevante Bereich ist demzufolge der in Gleichung~\ref{eq:config-2} beschriebene Menge $\mathit{C}_{free}$, der freie Konfigurationsraum, dessen Konfigurationen den Bereich beschreiben, durch den Roboter sich bewegen kann.
+
+\begin{equation}
+    \mathit{C} = \left\{ \left( \theta_1,\dots,\theta_6 \right) \in \theta_1\times\dots\times\theta_6 \mid \theta_i \in \left[ -2\pi, 2\pi \right]\right\}
+    \label{eq:config-1}
+\end{equation}
+\begin{equation}
+    \mathit{C}_{free} = \mathit{C}\backslash\mathit{O}
+    \label{eq:config-2}
+\end{equation}
+
+Je nach Algorithmus muss der Konfigurationsraum allerdings nicht im vorhinein berechnet werden.
+
+??Quelle
+
 
 \section{Berechnungsmethoden}
 
-\subsection{Kürzester Weg}
+\subsection{Kürzester Weg}\label{subsec:kurzester-weg}
 
 \subsection{Zellendekomposition}
 Zellendekomposition (Vollständige Abtastung)
@@ -25,6 +54,7 @@ Multi-Query
 Probabilistic Roadmaps
 Potentialfeldmethode / Gradientenverfahren
 Genetische Algorithmen
+
 
 \section{Constraints und Praxisbezug}
 Kinematisch (Winkelbegrenzung)

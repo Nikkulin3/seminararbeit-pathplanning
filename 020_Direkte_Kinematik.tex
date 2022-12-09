@@ -3,21 +3,43 @@
 
 \chapter{Direkte Kinematik}\label{ch:direkte-kinematik}
 
-?? Quelle
-
 Die direkte Kinematik ist dafür verantwortlich aus den verschiedenen Winkeln und Positionen der Gelenke die Rotation und Position des Endeffektors im Raum zu berechnen.
 Dazu wird zunächst in jedem Gelenk ein Koordinatenursprung gelegt, der eine Nullstellung jedes Gelenks beschreibt.
-Um alle Gelenke in einer kinematischen Kette abzubilden, kann dann beispielsweise mithilfe der homogenen Transformationsmatrix (Abschnitt~\ref{sec:homogene-transformationsmatrix}) und einem Parameter in den Freiheitsgraden des entsprechenden Gelenks eine Rechenvorschrift aufgebaut werden, um den Roboter zu beschreiben und die Position des Endeffektors schnell bestimmen zu können.
+Um alle Gelenke in einer kinematischen Kette abzubilden, kann mit einem Parameter in den Freiheitsgraden des entsprechenden Gelenks eine Rechenvorschrift aufgebaut werden, um den Roboter zu beschreiben und die Position des Endeffektors schnell bestimmen zu können.
+
+Zur Beschreibung von Transformationen wird in dieser Arbeit auf die Homogene Transformationsmatrix zurückgegriffen.
+Diese besteht aus einer Rotationsmatrix $R_{a,b}$, die die Rotation von System $a$ in System $b$ beschreibt und einem Translationsvektor $P_{a,b}$, der die Translation zwischen den zwei Systemen entspricht~\ref{eq:inv-rule0}~\cite[28]{craigIntroductionRoboticsMechanics2009}.
+Um eine Inverse Transformation von System $b$ in System $a$ zu erhalten, kann die Inverse der Transformationsmatrix $T_{a,b}$ oder die Regel aus Gleichung~\ref{eq:inv-rule1} verwendet werden.
+Bei der Multiplikation zweier geeigneter Matrizen können mehrere Transformationen in einer Matrix dargestellt werden.
+Ein Beispiel hierfür findet sich in Gleichung~\ref{eq:inv-rule2}.
+
+?? verschieben in Abschnitt 1.4 ??
+
+\begin{equation}
+    T_{a,b} = \begin{bmatrix}
+                  R_{a,b} & P_{a,b} \\
+                  0^T     & 1
+    \end{bmatrix} \label{eq:inv-rule0}
+\end{equation}
+\begin{equation}
+    T_{b,a} = \left( T_{a,b} \right)^{-1} =
+    \begin{bmatrix}
+        R_{b,a} & - R_{b,a}P_{a,b} \\
+        0^T     & 1
+    \end{bmatrix} \label{eq:inv-rule1}
+\end{equation}
+\begin{equation}
+    T_{a,b}\cdot T_{b,c}=T_{a,c}    \label{eq:inv-rule2}
+\end{equation}
 
 
 \section{DH-Konvention}\label{sec:dh-konvention}
 
 ?? Quelle
 
-?? Unterschied UR5 und UR5e https://www.universal-robots.com/articles/ur/application-installation/dh-parameters-for-calculations-of-kinematics-and-dynamics/ ??
 
 Die Konvention, die in der Regel verwendet wird, um Rotation und Translation eines Gliedes der kinematischen Kette darzustellen ist die sog.\ \ac{dhk} oder DH-Transformation.
-\ac{dhk} beschreibt, wie die Koordinatensysteme basieren auf dem vorherigen Koordinatensystem beschrieben werden.
+\ac{dhk} beschreibt, wie die Koordinatensysteme basieren auf dem vorherigen Koordinatensystem beschrieben werden~\cite{denavitKinematicNotationLowerPair1955,craigIntroductionRoboticsMechanics2009}.
 Um nun ausgehend von Gelenk $n-1$ das Koordinatensystem von Gelenk $n$ zu beschreiben, müssen die folgenden Regeln befolgt werden:
 
 \begin{enumerate}
@@ -87,10 +109,10 @@ Dies entspricht den folgenden Transformationsmatrizen (Gleichungen~\ref{eq:dh1},
 \end{equation}
 
 Um nun Koordinatensystem $n-1$ in Koordinatensystem $n$ zu überführen, kann die Transformationsmatrix $T_{n-1,n}$ verwendet werden (Gleichung~\ref{eq:dh5}).
-Für den beweglichen Freiheitsgrad der Gelenke kann für die einfache Berechnung noch eine Substitution für Variable $q_n$ durchgeführt werden (Gleichung~\ref{eq:subst1} für translatorische und Gleichung~\ref{eq:subst2} für rotatorische Gelenke).
+Für den beweglichen Freiheitsgrad der Gelenke wird dann jeweils eine freie Variable festgelegt ($\theta_n$ für translatorische und $d_n$ für rotatorische Gelenke).
 
 \begin{equation}
-    T_{n-1,n}(q_n) \coloneqq T_{\theta_n} \cdot T_{d_n} \cdot T_{a_n} \cdot T_{\alpha_n} =
+    T_{n-1,n}(\theta_n, d_n) \coloneqq T_{\theta_n} \cdot T_{d_n} \cdot T_{a_n} \cdot T_{\alpha_n} =
     \begin{bmatrix}
         \ct & -\st\ca & \st\sa  & a_n\ct \\
         \st & \ct\ca  & -\ct\sa & a_n\st \\
@@ -100,28 +122,32 @@ Für den beweglichen Freiheitsgrad der Gelenke kann für die einfache Berechnung
     \label{eq:dh5}
 \end{equation}
 
-?? Modifizierte dh-parameter, andere Matrix (siehe andersen~\cite{rasmusandersenKinematicsUR52018})
-
 \begin{figure}[h]
     \centering
     \includegraphics[width = .5\textwidth]{Bilder/Denavit-Hartenberg-Transformation.svg}
     \caption{\ac{dhk} zwischen zwei Gelenken~\cite{jahobrCoordinateSystemsDenavitHartenberg2007}}\label{fig:dh-konvention1}
 \end{figure}
 
+Oftmals wird in der Literatur auch eine alternative, modifizierte Form der DH-Parameter verwendet~\cite[75]{craigIntroductionRoboticsMechanics2009}.
+Um die Vergleichbarkeit mit~\cite{rasmusandersenKinematicsUR52018} zu gewährleisten wird in der Rechnung sowie im Code diese alternative Methode eingesetzt.
+Dabei verändert sich die Transformationsmatrix eines Gelenks auf die Werte aus Gleichung~\ref{eq:alt-tf}:
 
 \begin{equation}
-    d_n \coloneqq d_{n_0} + q_n    \label{eq:subst1}
-\end{equation}
-\begin{equation}
-    \theta_n \coloneqq \theta_{n_0} + q_n    \label{eq:subst2}
+    T_{n-1,n}(\theta_n, d_n) \coloneqq
+    \begin{bmatrix}
+        \ct                   & -\st                  & 0                   & a_{n-1}                  \\
+        \st\cos(\alpha_{n-1}) & \ct\cos(\alpha_{n-1}) & -\sin(\alpha_{n-1}) & -d_{n}\sin(\alpha_{n-1}) \\
+        \st\sin(\alpha_{n-1}) & \ct\sin(\alpha_{n-1}) & \cos(\alpha_{n-1})  & d_{n}\cos(\alpha_{n-1})  \\
+        0                     & 0                     & 0                   & 1                        \\
+    \end{bmatrix}
+    \label{eq:alt-tf}
 \end{equation}
 
 
 \section{Unified Robot Description Format}\label{sec:urdf}
 
-?? Quelle
 \ac{urdf} ist ein Standard entwickelt für \ac{ros}, um sowohl die geometrischen als auch physische und visuelle Eigenschaften eines Roboters zu beschreiben.
-Für die Beschreibung ist eine auf XML basierende Datei nötig, die mit Tags geschachtelt den Roboter mithilfe von sog. \enquote{links} und \enquote{joints} beschreibt.
+Für die Beschreibung ist eine auf XML basierende Datei nötig, die mit Tags geschachtelt den Roboter mithilfe von sog. \enquote{Links} und \enquote{Joints} beschreibt~\cite{ros.orgUrdfXMLModel}.
 
 Links beschreiben die physischen Verbindungen zwischen zwei Gelenken.
 Dabei wird unterschieden zwischen visuellen Eigenschaften (\enquote{visual}), Kollisionseigenschaften (\enquote{collision}) und Trägheitseigenschaften (\enquote{inertial}).
@@ -133,14 +159,16 @@ Für die Beschreibung eines Joints wird der vorhergehende Link als \enquote{pare
 Zudem müssen im Feld \enquote{origin} Translation und Rotation des Ursprungs im Koordinatensystem des Parent Links, sowie im Feld \enquote{axis} je nach Gelenk die Rotationsachse, Translationsachse oder Normale der Bewegungsoberfläche angegeben werden.
 Desweiteren ist es möglich, Schnittstellen für die Bewegung der Motoren zu definieren und Bewegungslimits für die Gelenke anzugeben, um die Ansteuerung des Roboters und die Bewegungsplanung zu vereinfachen.
 
+Die Schritte zur Berechnung der direkten Kinematik können für das bessere Verständnis im Code ?? (Anhang referenz) direkt nachvollzogen und visualisiert werden.
 
-\section{Beschreibung des UR5e}\label{sec:ur5-in-dh}
-?? Quelle https://www.universal-robots.com/articles/ur/application-installation/dh-parameters-for-calculations-of-kinematics-and-dynamics/
 
+\section{Beschreibung des UR5}\label{sec:ur5-in-dh}
 Der in dieser Arbeit betrachtete Roboter ist der UR5e von Universal Robots.
 Dieser ist ein vergleichsweise günstiger Roboter mit verringerter Zahl an Singularitäten (siehe Abschnitt~\ref{sec:singularitaten}), sechs Gelenken und einer offenen kinematischen Kette.
-Offiziell wird der Roboter mit den DH-Parametern aus Tabelle~\ref{tab:ur5-dh1} und dynamischen Eigenschaften der Links aus Tabelle~\ref{tab:ur5-dh2} beschrieben.
+Offiziell wird der Roboter mit den DH-Parametern aus Tabelle~\ref{tab:ur5-dh1} und dynamischen Eigenschaften der Links aus Tabelle~\ref{tab:ur5-dh2} beschrieben~\cite{universalrobotsUniversalRobotsDH}.
 Abbildung~\ref{fig:ur5-axis} kann zudem die Dimensionierung des Roboters und die Anordnung der Achsen in Nullstellung entnommen werden.
+
+Nach Datenblatt~\cite{universalrobotsUR5TechnicalSpecifications} hat der UR5 einen Arbeitsraum mit Radius 85cm (Abstand vom Befestigungspunkt bei ausgestrecktem Arm) und kann sich mit einer Maximalgeschwindigkeit von bis zu 180°/s bewegen.
 
 \begin{figure}[h]
     \centering
@@ -154,15 +182,15 @@ Abbildung~\ref{fig:ur5-axis} kann zudem die Dimensionierung des Roboters und die
         \toprule
         \textbf{Joint} & $\boldsymbol{\theta}$ \textbf{[rad]} & $\boldsymbol{a}$ \textbf{[m]} & $\boldsymbol{d}$ \textbf{[m]} & $\boldsymbol{\alpha}$ \textbf{[rad]}  \\
         \midrule
-        Joint 1        & 0                                    & 0                             & 0.1625                        & \pi/2                                \\
+        Joint 1        & 0                                    & 0                             & 0.089159                      & \pi/2                                \\
         Joint 2        & 0                                    & -0.425                        & 0                             & 0                                    \\
         Joint 3        & 0                                    & -0.3922                       & 0                             & 0                                    \\
-        Joint 4        & 0                                    & 0                             & 0.1333                        & \pi/2                                \\
-        Joint 5        & 0                                    & 0                             & 0.0997                        & -\pi/2                               \\
-        Joint 6        & 0                                    & 0                             & 0.0996                        & 0                                    \\
+        Joint 4        & 0                                    & 0                             & 0.10915                       & \pi/2                                \\
+        Joint 5        & 0                                    & 0                             & 0.09465                       & -\pi/2                               \\
+        Joint 6        & 0                                    & 0                             & 0.0823                        & 0                                    \\
         \bottomrule
     \end{tabular}
-    \caption{DH-Parameter des UR5e Roboters von Universal Robots~\cite{UniversalRobotsDH}}
+    \caption{DH-Parameter des UR5e Roboters von Universal Robots~\cite{universalrobotsUniversalRobotsDH}}
     \label{tab:ur5-dh1}
 \end{table}
 \begin{table}
@@ -171,14 +199,57 @@ Abbildung~\ref{fig:ur5-axis} kann zudem die Dimensionierung des Roboters und die
         \toprule
         \textbf{Link} & \textbf{Masse [kg]} & \textbf{Schwerpunkt [m]} \\
         \midrule
-        Link 1        & 3.761               & [0, -0.02561, 0.00193]   \\
-        Link 2        & 8.058               & [0.2125, 0, 0.11336]     \\
-        Link 3        & 2.846               & [0.15, 0.0, 0.0265]      \\
-        Link 4        & 1.37                & [0, -0.0018, 0.01634]    \\
-        Link 5        & 1.3                 & [0, 0.0018,0.01634]      \\
-        Link 6        & 0.365               & [0, 0, -0.001159]        \\
+        Link 1        & 3.7                 & [0, -0.02561, 0.00193]   \\
+        Link 2        & 8.393               & [0.2125, 0, 0.11336]     \\
+        Link 3        & 2.33                & [0.15, 0.0, 0.0265]      \\
+        Link 4        & 1.219               & [0, -0.0018, 0.01634]    \\
+        Link 5        & 1.219               & [0, 0.0018,0.01634]      \\
+        Link 6        & 0.1879              & [0, 0, -0.001159]        \\
         \bottomrule
     \end{tabular}
-    \caption{Beschreibung der dynamischen Eigenschaften des UR5e Roboters von Universal Robots~\cite{UniversalRobotsDH}}
+    \caption{Beschreibung der dynamischen Eigenschaften des UR5e Roboters von Universal Robots~\cite{universalrobotsUniversalRobotsDH}}
     \label{tab:ur5-dh2}
 \end{table}
+
+
+\section{Geschwindigkeitskinematik}
+
+Um einen Roboter in Bewegung darzustellen, ist nicht nur die Transformation der Gelenke relevant, sondern auch dessen Kinematik und Dynamik.
+Dies ist besonders relevant, da in der echten Welt bestimmte Maximalwerte für (Winkel-) Geschwindigkeit und Beschleunigung, sowie Trägheit und Drehmoment eingehalten werden müssen, um den sicheren Betrieb sowie das Verhalten der Masse korrekt abzubilden.
+
+Für die Berechnung der Geschwindigkeit des Endeffektors im Gelenk $e$ kann die Jakobi-Matrix verwendet werden.
+Dabei gilt für eine Drehung nach DH-Konvention um Achse $z_{n-1}$ für die Geschwindigkeit Gleichung~\ref{eq:kin-1} und für die Winkelgeschwindigkeit Gleichung~\ref{eq:kin-2}.
+Für translatorische Gelenke gelten stattdessen Gleichungen~\ref{eq:kin-1-1} und~\ref{eq:kin-2-1}.
+Die Vektoren $z_{i}$ entsprechen jeweils der Einheitsvektor der z-Achse $z_{i} = \frac{Z_{0,i}}{\lvert Z_{0,i} \rvert}$ auf Basis der Transformationsmatrix $T_{0,i} = \prod_{n=1}^{i}T_{n-1,n}$ (siehe Konvention Gleichung~\ref{eq:inv-konv}).
+
+\begin{equation}
+    J_{P_{n}} = z_{n-1} \times (P_{e} - P_{n-1}) \label{eq:kin-1}
+\end{equation}
+\begin{equation}
+    J_{\omega_{n+1}} = z_{n-1} \label{eq:kin-2}
+\end{equation}
+\begin{equation}
+    J_{P_{n}} = z_{n-1} \label{eq:kin-1-1}
+\end{equation}
+\begin{equation}
+    J_{\omega_{n+1}} = 0 \label{eq:kin-2-1}
+\end{equation}
+
+Für alle Gelenke ergibt sich dann für die Jakobi-Matrix eines Sechs-Achsen-Roboters wie dem UR5 die folgende Gleichung~\ref{eq:kin-3} mit jeweils sechs Spalten und Zeilen.
+Um die Geschwindigkeit des Endeffektors $v_6$ zu erhalten, muss die Matrix mit der Geschwindigkeit $\dot{\theta}$ multipliziert werden (Gleichung~~\ref{eq:kin-4}).
+
+\begin{equation}
+    J_{0,6}=
+    \begin{pmatrix}
+        J_{P_1}      & \dots & J_{P_6}      \\
+        J_{\omega_1} & \dots & J_{\omega_6}
+    \end{pmatrix}\label{eq:kin-3}
+\end{equation}
+\begin{equation}
+    v_6 =
+    \begin{pmatrix}
+        \dot{P}_{0,6} \\ \omega_6
+    \end{pmatrix} =
+    J_{0,6}\cdot\dot{\theta}
+    \label{eq:kin-4}
+\end{equation}

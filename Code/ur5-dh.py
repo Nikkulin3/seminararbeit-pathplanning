@@ -1,8 +1,9 @@
-from typing import Optional
+from typing import Optional, Union, List
 
 import numpy as np
 import vedo
-from scipy.spatial.transform import Rotation
+from scipy.spatial.transform import Rotation, Slerp
+from sympy import Quaternion, Matrix
 from vedo import Cylinder, Arrow, Line, Sphere
 
 DH = {
@@ -16,7 +17,7 @@ DH = {
 class T:
     def __init__(self, matrix_4_4: np.array):
         if type(matrix_4_4) is T:
-            self.mat = matrix_4_4.mat
+            self.mat: np.array = matrix_4_4.mat
         else:
             self.mat: np.array = matrix_4_4
 
@@ -24,12 +25,14 @@ class T:
         return T(np.matmul(self.mat, other.mat))
 
     def __invert__(self):
-        return T(np.linalg.inv(self.mat))
+        inv = np.zeros_like(self.mat)
+        rot_t = self.rot().transpose()
+        return self.from_rotation_and_translation(rot_t, np.matmul(-rot_t, self.transl()))
 
-    def rot(self):
+    def rot(self) -> np.array:
         return self.mat[:3, :3]
 
-    def transl(self):
+    def transl(self) -> np.ndarray:
         return self.mat[:3, 3]
 
     def mul_vec(self, vec):
@@ -46,7 +49,22 @@ class T:
             axis = (1, 0, 0)
         else:
             axis = vec / angle
-        return angle, axis
+        return axis, angle
+
+    def euler_angles(self, convention='zyx'):
+        angles = Rotation.from_matrix(self.rot()).as_euler(convention)
+        return np.array(angles)
+
+    def quaternion(self):
+        return Quaternion.from_rotation_matrix(Matrix(self.rot()))
+
+    @staticmethod
+    def from_rotation_and_translation(rot: np.ndarray, transl: np.ndarray):
+        mat = np.zeros((4, 4))
+        mat[:3, :3] = rot
+        mat[3, 3] = 1
+        mat[:3, 3] = transl
+        return T(mat)
 
     def __str__(self):
         return str(self.mat)
@@ -70,7 +88,7 @@ class Joint:
         self.alpha = alpha
         self.prev_joint: Joint = prev_joint
         self.tf: T = self.__get_tf(0)
-        self.abs_tf: T = self.tf
+        self.abs_tf: Optional[T] = None
 
     @staticmethod
     def zero_joint():
@@ -117,6 +135,7 @@ class Joint:
         return self
 
     def set_abs_tf(self, prev_tf: T):
+        assert prev_tf is not None, "previous transforms have not been set, run set_joint_angles or use target_tf"
         self.abs_tf = prev_tf * self.tf
         return self.abs_tf
 
@@ -163,12 +182,14 @@ class UR5:
 
     @staticmethod
     def __theta_1(target_tf, d4, d6):
-        p05 = target_tf.mul_vec([0, 0, -d6, 1])
-        p05x, p05y, _, _ = p05
-        return [
-            np.arctan2(p05y, p05x) + sgn * (np.arccos(d4 / np.linalg.norm((p05x, p05y))) + np.pi / 2)
+        p05 = target_tf.transl() - d6 * target_tf.z_rot()
+        p05x, p05y, _ = p05
+        p05xy = [p05x, p05y]
+        th1 = [
+            np.arctan2(p05y, p05x) + sgn * (np.arccos(d4 / np.linalg.norm(p05xy))) + np.pi / 2
             for sgn in [-1, 1]
         ]
+        return th1
 
     @staticmethod
     def __theta_5(target_tf, d4, d6, theta_1):
@@ -176,6 +197,8 @@ class UR5:
         p_06x, p_06y, p_06z = p_06
         sin, cos = np.sin, np.cos
         cos_val = (p_06x * sin(theta_1) - p_06y * cos(theta_1) - d4) / d6
+        if np.abs(np.abs(cos_val) - 1) < 1e-6:
+            return [np.arccos(int(cos_val))]
         return [
             sgn * (
                 np.arccos(cos_val) if -1 <= cos_val <= 1 else np.nan
@@ -184,7 +207,7 @@ class UR5:
         ]
 
     @staticmethod
-    def __theta_6(inverted_target_tf, theta_1, theta_5):
+    def __theta_6(inverted_target_tf, theta_1, theta_5, theta_6_if_singularity=0.):
         sin, cos = np.sin, np.cos
 
         x_60x, x_60y, _ = inverted_target_tf.x_rot()
@@ -194,11 +217,12 @@ class UR5:
         numerator2 = x_60x * sin(theta_1) - y_60x * cos(theta_1)
         denominator = sin(theta_5)
 
-        if np.abs(denominator) < 1e-7:
-            theta_6 = 0.  # any angle
+        is_singularity = np.abs(denominator) < 1e-7
+        if is_singularity:
+            theta_6 = theta_6_if_singularity  # any angle
         else:
             theta_6 = np.arctan2(numerator1 / denominator, numerator2 / denominator)
-        return theta_6
+        return theta_6, is_singularity
 
     @staticmethod
     def __theta_3(target_tf, tf01, tf45, tf56, a2, a3):
@@ -210,11 +234,11 @@ class UR5:
         p14x, _, p14z = p14
         l_p14xz = np.linalg.norm((p14x, p14z))
         return [
-                   sgn * np.arccos(
-                       (l_p14xz ** 2 - a2 ** 2 - a3 ** 2) / (2 * a2 * a3)
-                   )
-                   for sgn in [-1, 1]
-               ], tf14, l_p14xz
+            sgn * np.arccos(
+                (l_p14xz ** 2 - a2 ** 2 - a3 ** 2) / (2 * a2 * a3)
+            )
+            for sgn in [-1, 1]
+        ], tf14, l_p14xz
 
     @staticmethod
     def __theta_2(a3, tf14: T, l_p14xz, theta_3):
@@ -230,12 +254,14 @@ class UR5:
 
     def calculate_inverse_kinematics(self, target_tf: T,
                                      return_one_solution=False,
-                                     rad=True):  # target tf relative to Joint zero transform of robot
+                                     rad=True,
+                                     theta_6_if_singularity=0.):  # target tf relative to Joint zero transform of robot
         d1, d2, d3, d4, d5, d6 = [self.joints[i].d for i in range(6)]
         a1, a2, a3, a4, a5, a6 = [self.joints[i].a for i in range(6)]
         inverted_target_tf = ~target_tf
 
         solutions = []
+        singularities = []
 
         thetas_1 = self.__theta_1(target_tf, d4, d6)
         for theta_1 in thetas_1:
@@ -247,7 +273,7 @@ class UR5:
                 if np.isnan(theta_5):
                     continue
                 tf45 = self.joints[4].move_to(theta_5).tf
-                theta_6 = self.__theta_6(inverted_target_tf, theta_1, theta_5)
+                theta_6, is_singularity = self.__theta_6(inverted_target_tf, theta_1, theta_5, theta_6_if_singularity)
                 if np.isnan(theta_6):
                     continue
                 tf56 = self.joints[5].move_to(theta_6).tf
@@ -264,16 +290,15 @@ class UR5:
                     if np.isnan(theta_4):
                         continue
                     solutions.append([theta_1, theta_2, theta_3, theta_4, theta_5, theta_6])
+                    singularities.append(is_singularity)
                     if return_one_solution:
-                        # print(f"found first solution (others skipped): {np.round(np.rad2deg(solutions[0]))}")
                         if not rad:
                             solutions = np.rad2deg(solutions)
-                        return solutions[0]
+                        return solutions[0], singularities[0]
 
-        # print(f"found {len(solutions)} solutions:\n{np.round(np.rad2deg(solutions))}")
         if not rad:
             solutions = np.rad2deg(solutions)
-        return solutions
+        return solutions, singularities
 
     def vedo_elements(self):
         amplitude = .05
@@ -292,36 +317,102 @@ class UR5:
             ys.append(Arrow(*j.transform_vector((0, amplitude, 0), absolute_tf), c="green"))
             zs.append(Arrow(*j.transform_vector((0, 0, amplitude), absolute_tf), c="blue"))
         # print("----------------------------")
-        lines = [Line(a.pos(), b.pos(), c=tuple(np.random.random(3)), lw=5) for a, b in zip(zs, zs[1:])]
+        c = np.random.random(3)
+        lines = [Line(a.pos(), b.pos(), c=tuple(c), lw=5) for a, b in zip(zs, zs[1:])]
         return xs + ys + zs, lines
 
     def get_joint_angles(self):
         return tuple([j.theta for j in self.joints])
 
+    def get_joint_positions(self):
+        return np.array([j.get_pos() for j in self.joints])
 
-def main2():
+    def get_endeffector_transform(self):
+        return self.joints[-1].abs_tf
+
+
+class PlanningModule:
+    target_diff_angles = (5, 5, 5, 5, 5, 5)
+
+    def __init__(self):
+        self.robot = UR5()
+        self.targets = []
+        self.path = []
+
+    def slerp(self, list_of_transforms: List[T], number_of_points: int = 10):
+        assert len(list_of_transforms) > 1, "number of transforms supllied must be greater than one"
+        times = np.linspace(0, len(list_of_transforms) - 1, number_of_points)
+        key_rots = Rotation.from_matrix([t.rot() for t in list_of_transforms])
+        slerp = Slerp(list(range(len(list_of_transforms))), key_rots)
+        interp_rots = slerp(times)
+        delta_transl = [(tf0.transl(), tf1.transl() - tf0.transl()) for tf0, tf1 in
+                        zip(list_of_transforms, list_of_transforms[1:])]
+        translations = []
+        for t in times[:-1]:
+            tr0, vec = delta_transl[int(t)]
+            dt = t - int(t)
+            translations.append(tr0 + vec * dt)
+        translations.append(list_of_transforms[-1].transl())
+        return [T.from_rotation_and_translation(r, t) for r, t in zip(interp_rots.as_matrix(), translations)]
+
+    @staticmethod
+    def partial_translation(tr: np.ndarray, fraction: float) -> np.ndarray:
+        return tr * fraction
+
+    def shortest_path(self, thetas1, thetas2):
+        self.robot.set_joint_angles(thetas1)
+        tf1 = self.robot.get_endeffector_transform()
+        self.robot.set_joint_angles(thetas2)
+        tf2 = self.robot.get_endeffector_transform()
+        self.targets = self.slerp([tf1, tf2])
+
+    def targets_to_any_path(self):
+        self.path = [self.robot.calculate_inverse_kinematics(tf, True) for tf in self.targets]
+        return self.path
+
+    def vedo_elements(self):
+        for thetas, singularities in self.targets_to_any_path():
+            self.robot.set_joint_angles(thetas)
+            yield self.robot.vedo_elements()
+
+
+def main2():  # inverse kinematics example
     robot = UR5()
-    thetas = (10, -90, 90, 20, 40, 10)
+    thetas = (0, -90, -90, 0, 90, 0)
     robot.set_joint_angles(*thetas, rad=False)
     print(f"Direct kinematics to: {np.round(thetas, 1)}")
-    solutions = robot.calculate_inverse_kinematics(robot.joints[-1].abs_tf, rad=False)
-    for i, solution in enumerate(solutions):
+    solutions, singularities = robot.calculate_inverse_kinematics(robot.joints[-1].abs_tf, rad=False,
+                                                                  theta_6_if_singularity=thetas[-1])
+    closest, min_diff = None, 1e99
+    for i, (solution, is_singularity) in enumerate(zip(solutions, singularities)):
         diff = np.linalg.norm(np.array(solution) - thetas)
-        if diff < 1e-6:
+        if diff < min_diff:
+            closest, min_diff = solution, diff
+        if diff < 1e-3:
             print("Direct and inverse kinematics are matching!")
             break
-    else:
-        raise AssertionError("Direct and inverse kinematics conflicting!")
 
     clones = []
-    for i, solution in enumerate(solutions):
+    for i, (solution, is_singularity) in enumerate(zip(solutions, singularities)):
         robot_cpy = UR5()
-        print(f"solution {i + 1}: {np.round(solution, 1)}")
+        print(f"solution {i + 1}: {np.round(solution, 1)} {'' if not is_singularity else '(singularity)'}")
         robot_cpy.set_joint_angles(solution, rad=False)
         clones.append(robot_cpy.vedo_elements())
-    vedo.show(Sphere(r=.01), clones, axes=1, interactive=True)
+    if min_diff > 1e-3:
+        robot_cpy = UR5()
+        robot_cpy.set_joint_angles(closest, rad=False)
+        vedo.show(Sphere(r=.01), robot.vedo_elements(), robot_cpy.vedo_elements(), axes=1, interactive=True)
+        raise AssertionError("Direct and inverse kinematics conflicting!")
+
+    vedo.show(Sphere(r=.01), robot.vedo_elements(), axes=1, interactive=True)
+
+
+def main3():  # shortest path example
+    planner = PlanningModule()
+    planner.shortest_path((0, 0, 0, 0, 0, 0), (0, -90, -90, 0, 90, 0))
+    vedo.show(Sphere(r=.01), list(planner.vedo_elements()), axes=1, interactive=True)
 
 
 if __name__ == '__main__':
-    main2()
+    main3()
     # viz online: https://robodk.com/robot/Universal-Robots/UR5#View3D

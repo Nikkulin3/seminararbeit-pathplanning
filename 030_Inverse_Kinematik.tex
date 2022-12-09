@@ -16,9 +16,9 @@ Auf die ersten beiden Lösungsmöglichkeiten wird im Folgenden näher eingegange
 
 \section{Analytische Lösung}\label{sec:analytische-losung}
 
-Für eine direkte Lösung muss die Formel aus Gleichungen~\ref{eq:dh5} und~\ref{eq:subst2} herangezogen werden.
-Nach Multiplikation der Transformationsmatrizen müsste die entstehende Gleichung~\ref{eq:inv-kin1} nach den Variablen $q_1$ bis $q_n$ aufgelöst werden.
-Da aufgrund der rotatorischen Gelenke nichtlineare trigonometrische Funktionen verwendet werden, ist diese Funktion bei Industrierobotern meist nichtlinear und in vielen Fällen auch nicht lösbar.
+Für eine direkte Lösung muss zunächst die Formel aus Gleichung~\ref{eq:dh5} oder~\ref{eq:alt-tf} herangezogen werden.
+Nach Multiplikation der Transformationsmatrizen müsste die entstehende Gleichung~\ref{eq:inv-kin1} nach den freien Variablen $\theta_1$ bis $\theta_n$ bzw. $d_1$ bis $d_n$ aufgelöst werden.
+Da aufgrund der rotatorischen Gelenke nichtlineare trigonometrische Funktionen verwendet werden, ist diese Funktion bei Industrierobotern überwiegend nichtlinear und in vielen Fällen auch nicht lösbar.
 
 \begin{equation}
     T_{0,n}(\overrightarrow{q}) = \prod_{i=1}^{n} T_{i-1,i}(q_i)     \label{eq:inv-kin1}
@@ -34,6 +34,22 @@ Dennoch kann durch eine Analyse der geometrischen Eigenschaften und der geringen
 Die Strategie hierbei ist, beim ersten Gelenk zu beginnen und nach und nach die anderen Gelenke mit der Transformation $T_{0,6}$ des Endeffektors zu verknüpfen.
 Bekannt sind zu Beginn der Rechnung nur die DH-Parameter $(\theta_i, a_i, d_i, \alpha_i)$ jedes Gelenks $i$ im Ausgangszustand, wobei $\theta_i$ als freie Variable jedes Gelenks betrachtet wird (Abschnitt~\ref{sec:ur5-in-dh}), sowie die Transformation des Endeffektors $T_{0,6}$.
 Eine detailliertere Rechnung kann~\cite{rasmusandersenKinematicsUR52018} und~\cite{hawkinsAnalyticInverseKinematics2013} entnommen werden.
+
+In der folgenden Rechnung gilt stets die untenstehende Konvention aus~\cite[82]{craigIntroductionRoboticsMechanics2009} für eine beliebige Transformation $T_{a,b}$ von einem System $a$ in ein System $b$ (Gleichung~\ref{eq:inv-konv}), sowie die in Abschnitt~\ref{sec:dh-konvention} vorgestellten Rechenregeln für Transformationsmatrizen:
+
+\begin{equation}
+    T_{a,b} = \begin{bmatrix}
+                  X_{a,b} & Y_{a,b} & Z_{a,b} & P_{a,b} \\
+                  0       & 0       & 0       & 1
+    \end{bmatrix}
+    = \begin{bmatrix}
+          X_{a,bx} & Y_{a,bx} & Z_{a,bx} & P_{a,bx} \\
+          X_{a,by} & Y_{a,by} & Z_{a,by} & P_{a,by} \\
+          X_{a,bz} & Y_{a,bz} & Z_{a,bz} & P_{a,bz} \\
+          0        & 0        & 0        & 1
+    \end{bmatrix}
+    \label{eq:inv-konv}
+\end{equation}
 
 \subsubsection{1. Gelenk eins (Basis)}
 
@@ -93,10 +109,12 @@ Nach Gleichsetzen der x- und y-Einträge der beiden Gleichungen und anschließen
 Dabei kann es genau eine Lösung geben.
 Falls $\sin\theta_5=0$, liegt eine Singularität vor und eine Lösung kann nicht bestimmt werden.
 Dies tritt auf, wenn neben den Achsen $z_2$, $z_3$ und $z_4$ auch Achse $z_6$ parallel steht.
+In diesem Fall kann eine beliebige Lösung gewählt werden, im Regelfall wird $\theta_6=0$ gesetzt.
+
 \begin{figure}[h]
     \centering
     \includegraphics[width = .4\textwidth]{Bilder/inv3}
-    \caption{Berechnung von $\theta_6$ mit Sphärischen Koordinaten, für Koordinatensystembeschreibung siehe Abbildung~\ref{fig:ur5-axis}}\label{fig:inv1-3}
+    \caption{Berechnung von $\theta_6$ mit Sphärischen Koordinaten, für Koordinatensystembeschreibung siehe Abbildung~\ref{fig:ur5-axis}~\cite{rasmusandersenKinematicsUR52018}}\label{fig:inv1-3}
 \end{figure}
 \begin{equation}
     Y_{6,1}=
@@ -142,7 +160,7 @@ Nach der Anwendung des $\arccos$ erhält man in der Regel zwei Lösungen, die de
 \begin{figure}[h]
     \centering
     \includegraphics[width = .8\textwidth]{Bilder/inv4}
-    \caption{Berechnung von $\theta_4$ durch Vereinfachung als zweidimensionales System und Bestimmung der Transformation zwischen Gelenk 1 und Gelenk 4.}\label{fig:inv1-4}
+    \caption{Berechnung von $\theta_4$ durch Vereinfachung als zweidimensionales System und Bestimmung der Transformation zwischen Gelenk 1 und Gelenk 4~\cite{rasmusandersenKinematicsUR52018}}\label{fig:inv1-4}
 \end{figure}
 
 \subsubsection{5. Gelenk zwei (Schulter)}
@@ -178,8 +196,9 @@ Mit den ersten beiden Werten dieser Spalte, $X_{3,4x}$ und $X_{3,4y}$, erhält m
 \subsubsection{Zusammenfassung}
 
 Mithilfe der Gleichungen~\ref{eq:inv7-1} bis~\ref{eq:inv7-6} kann die Inverse Kinematik eines UR5-Roboters direkt bestimmt werden.
-Dabei existieren acht Lösungen, jeweils eine für die Gelenke sechs (Endeffektor), zwei (Schulter) und vier (unteres Handgelenk) und jeweils zwei für die Gelenke eins (Basis), drei (Ellenbogen) und fünf (oberes Handgelenk).
-Neben den DH-Parametern und der gewünschten Transformation des Endeffektors muss für Gleichung~\ref{eq:inv7-1} $P_{0,5}$ (siehe Gleichung~\ref{fig:inv1-1}), für Gleichung~\ref{eq:inv7-3} die Einheitsvektoren $X_{6,0x}$, $X_{6,0y}$ und $Y_{6,0x}$ $Y_{6,0x}$, für Gleichung~\ref{eq:inv7-4} und~\ref{eq:inv7-4} die x- und y-Werte des Vektors $P_{1,4}$ und für Gleichung~\ref{eq:inv7-6} die Werte $(1,1)$ und $(2,1)$ der Transformationsmatrix $T_{3,4}$ bestimmt werden.
+Dabei existieren in der Regel acht mögliche Lösungen, jeweils eine für die Gelenke sechs (Endeffektor), zwei (Schulter) und vier (unteres Handgelenk) und jeweils zwei für die Gelenke eins (Basis), drei (Ellenbogen) und fünf (oberes Handgelenk).
+Falls die Achsen $z_2$, $z_3$, $z_4$ und $z_6$ parallel stehen, kann $\theta_6$ beliebig gewählt werden, sodass eine Singularität mit beliebig vielen Lösungen vorliegt.
+Neben den DH-Parametern und der gewünschten Transformation des Endeffektors muss für Gleichung~\ref{eq:inv7-1} $P_{0,5}$ (Gleichung~\ref{fig:inv1-1}), für Gleichung~\ref{eq:inv7-3} die Transformation $T_{60}$, für Gleichung~\ref{eq:inv7-4} und~\ref{eq:inv7-4} die Transformation $T_{14}$ und für Gleichung~\ref{eq:inv7-6} die Transformation $T_{3,4}$ mit der Regeln aus Gleichungen~\ref{eq:inv-rule0},~\ref{eq:inv-rule1} und~\ref{eq:inv-rule2} bestimmt werden.
 
 \begin{equation}
     \theta_1 = \arctantwo(P_{0,5y}, P_{0,5x}) \pm \arccos \left( \frac{d_4}{ \sqrt{ P_{0,5x}^2 + P_{0,5y}^2 }  } \right) + \frac{\pi}{2}
@@ -219,17 +238,16 @@ Neben den DH-Parametern und der gewünschten Transformation des Endeffektors mus
     \label{eq:inv7-6}
 \end{equation}
 
+Die Schritte zur Berechnung der inversen Kinematik können für das bessere Verständnis im Code ?? (Anhang referenz) direkt nachvollzogen und visualisiert werden.
+
 
 \section{Singularitäten}\label{sec:singularitaten}
 
+Wie in Abschnitt~\ref{sec:geometrische-losung} ermittelt, existiert beim UR5 genau eine Position, bei der eine Singularität vorliegt.
+Singularitäten zeichnen sich dadurch aus, dass es unendlich viele Lösungen für eine bestimmte Zieltransformation gibt.
+In der Regel tritt dies genau dann auf, wenn zwei Rotationsachsen parallel zueinander stehen und ihre Bewegung durch das Drehen in gegensätzliche Richtungen beliebig ausgleichen können.
 
-Kuka vs UR5.
-
-Theorie (rundungsfehler), Praxis (große Geschwindigkeiten)
-alpha-2
-alpha-1
-alpha-5
-Elbow-Up / Elbow-Down
-
-
-\section{Geschwindigkeitskinematik}
+In der Praxis tritt dieser Fall allerdings kaum auf, da durch kleine Rundungsfehler bei der Rechnung nur im Extremfall eine exakte Parallelität hergestellt wird.
+Trotzdem sind Singularitäten problematisch, da beim Durchfahren einer solchen Position extreme Positionsänderungen der verschiedenen Gelenke erforderlich sind.
+Aus diesem Grund ist es ratsam, diese Positionen möglichst zu vermeiden.
+Für weitere Informationen zur Pfadplanung, siehe Abschnitt~\ref{ch:pfadplanung}.
