@@ -35,10 +35,29 @@ Je nach Algorithmus muss der Konfigurationsraum allerdings nicht im vorhinein be
 
 ??Quelle
 
+% todo berechnung/beschreibung von collision detection mit bb / trees
+https://www.geometrictools.com/Documentation/DynamicCollisionDetection.pdf
 
 \section{Berechnungsmethoden}
 
 \subsection{Kürzester Weg}\label{subsec:kurzester-weg}
+
+In dieser Berechnungsmethode werden Position und Orientierung des Endeffektors linear zwischen zwei oder mehr Transformationen $T_1$ und $T_2$ verändert.
+Für die Translation zwischen $P_1$ und $P_2$ kann für jeden Schritt ein Faktor $t \in \left[0,1\right]$ multipliziert werden (Gleichung~\ref{eq:shortest-path-1}).
+Zwischen zwei Rotationen $R_1$ und $R_2$ wird in der Regel der sog.\ Slerp verwendet (Gleichung~\ref{eq:shortest-path-2}).
+Dabei müssen die Rotationen der allerdings erst in Quaternionen $Q_1$ und $Q_2$ umgerechnet werden.
+Zu beachten sind zudem die Rechenregeln der Quaternionen, die hier nicht näher erklärt werden.
+
+\begin{equation}
+    P_{t} = P_0 + \left( P_1 - P_0 \right) \cdot t
+    \label{eq:shortest-path-1}
+\end{equation}
+\begin{equation}
+    Q_{t} = Q_1 \cdot \left( Q_1^{-1} \cdot Q_2 \right)^t
+    \label{eq:shortest-path-2}
+\end{equation}
+
+?? Quelle
 
 \subsection{Zellendekomposition}
 Zellendekomposition (Vollständige Abtastung)

@@ -1,10 +1,10 @@
-from typing import Optional, Union, List
+from typing import Optional, Union, List, Tuple
 
 import numpy as np
 import vedo
 from scipy.spatial.transform import Rotation, Slerp
 from sympy import Quaternion, Matrix
-from vedo import Cylinder, Arrow, Line, Sphere
+from vedo import Cylinder, Arrow, Line, Sphere, Mesh, Point
 
 DH = {
     # "theta": (0, 0, 0, 0, 0, 0),
@@ -162,6 +162,8 @@ class UR5:
             j = Joint(DH["a"][i], DH["d"][i], DH["alpha"][i], self.joints[-1])
             self.joints.append(j)
         self.joints = self.joints[1:]
+        self.vedo_e = None
+        self.vedo_meshes = None
 
     def set_joint_angles(self, *thetas, rad=True):
         prev: Optional[Joint] = None
@@ -178,6 +180,7 @@ class UR5:
             else:
                 j.set_abs_tf(T(prev.abs_tf))
             prev = j
+        self.vedo_e, self.vedo_meshes = None, None
         # print(f"Successfully moved robot to position theta={np.round(np.rad2deg(self.get_joint_angles()), 0)}")
 
     @staticmethod
@@ -262,7 +265,7 @@ class UR5:
 
         solutions = []
         singularities = []
-
+        self.vedo_e, self.vedo_meshes = None, None
         thetas_1 = self.__theta_1(target_tf, d4, d6)
         for theta_1 in thetas_1:
             if np.isnan(theta_1):
@@ -300,7 +303,73 @@ class UR5:
             solutions = np.rad2deg(solutions)
         return solutions, singularities
 
+    def meshes(self) -> List[Mesh]:
+        if self.vedo_meshes is not None:
+            return self.vedo_meshes
+
+        def c(b, t, d):
+            return Cylinder(pos=[b, t], r=d, c="grey").wireframe()
+
+        def s(x, r):
+            return Sphere(pos=x, r=r, c="grey").wireframe()
+
+        d1, d2, d3, d4, d5, d6 = [self.joints[i].d for i in range(6)]
+        # a1, a2, a3, a4, a5, a6 = [self.joints[i].a for i in range(6)]
+        shoulder_width = d4 / 2 - .01
+        underarm_width = .75 * shoulder_width
+        xs, ys, zs, _ = self.vedo_elements()
+        # dx = [(x.top - x.base) for x in xs]
+        # dx = [x / np.linalg.norm(x) for x in dx]
+        # dy = [(y.top - y.base) for y in ys]
+        # dy = [y / np.linalg.norm(y) for y in dy]
+        dz = [(z.top - z.base) for z in zs]
+        dz = [z / np.linalg.norm(z) for z in dz]
+        meshes = [
+            c(xs[0].base, xs[1].base, shoulder_width),
+            s(xs[1].base, shoulder_width),
+            c(xs[1].base, xs[1].base + dz[2] * shoulder_width * 2, shoulder_width),
+            s(xs[1].base + dz[2] * shoulder_width * 2, shoulder_width),
+            c(xs[1].base + dz[2] * shoulder_width * 2, xs[3].base + dz[2] * shoulder_width * 2, shoulder_width),
+            s(xs[3].base + dz[2] * shoulder_width * 2, shoulder_width),
+            c(xs[3].base + dz[2] * shoulder_width * 2, xs[3].base, underarm_width),
+            s(xs[3].base, underarm_width),
+            c(xs[3].base, xs[4].base, underarm_width),
+            s(xs[4].base, underarm_width),
+            c(xs[4].base, xs[5].base, underarm_width),
+            s(xs[5].base, underarm_width),
+            c(xs[5].base, xs[6].base, underarm_width),
+        ]
+        self.vedo_meshes = meshes
+        return meshes
+
+    def hitting_itself(self):
+        meshes = self.meshes()
+
+        def distance(actor, other_actor) -> float:
+            actor = vedo.Points(actor.points())
+            distances = actor.distance_to(other_actor, signed=True).pointdata["Distance"]
+            index = np.argmin(distances)
+            return distances[index]
+
+        def intersect(one_actor, other_actor):
+            return distance(one_actor, other_actor) < min_dist and distance(other_actor, one_actor) < min_dist
+
+        # intersecting
+        min_dist = -.01
+        for i, mesh in enumerate(meshes):
+            j0 = i + 3
+            for j, mesh2 in enumerate(meshes[j0:]):
+                j += j0
+                if j == 4 and i == 0:
+                    continue
+                intersects = intersect(mesh, mesh2)
+                if intersects:
+                    return True
+        return False
+
     def vedo_elements(self):
+        if self.vedo_e is not None:
+            return self.vedo_e
         amplitude = .05
         x = Arrow((0, 0, 0), (amplitude, 0, 0)).c("red")
         y = Arrow((0, 0, 0), (0, amplitude, 0)).c("green")
@@ -319,7 +388,8 @@ class UR5:
         # print("----------------------------")
         c = np.random.random(3)
         lines = [Line(a.pos(), b.pos(), c=tuple(c), lw=5) for a, b in zip(zs, zs[1:])]
-        return xs + ys + zs, lines
+        self.vedo_e = xs, ys, zs, lines
+        return self.vedo_e
 
     def get_joint_angles(self):
         return tuple([j.theta for j in self.joints])
@@ -397,22 +467,52 @@ def main2():  # inverse kinematics example
         robot_cpy = UR5()
         print(f"solution {i + 1}: {np.round(solution, 1)} {'' if not is_singularity else '(singularity)'}")
         robot_cpy.set_joint_angles(solution, rad=False)
-        clones.append(robot_cpy.vedo_elements())
+        xs, ys, zs, lines = robot_cpy.vedo_elements()
+        clones.append((xs[-1], ys[-1], zs[-1], lines))
     if min_diff > 1e-3:
         robot_cpy = UR5()
         robot_cpy.set_joint_angles(closest, rad=False)
         vedo.show(Sphere(r=.01), robot.vedo_elements(), robot_cpy.vedo_elements(), axes=1, interactive=True)
         raise AssertionError("Direct and inverse kinematics conflicting!")
+    meshes = robot.meshes()
+    vedo.show(Sphere(r=.01), clones, meshes,
+              [Point(m.center_of_mass(), c="red") for m in meshes],
+              axes=1,
+              interactive=True)
 
-    vedo.show(Sphere(r=.01), robot.vedo_elements(), axes=1, interactive=True)
+
+def main2b():
+    thetas = (0, -90, -180, 0, 90, 0)
+    robot = UR5()
+    robot.set_joint_angles(*thetas, rad=False)
+
+    solutions, _ = robot.calculate_inverse_kinematics(robot.joints[-1].abs_tf, rad=False,
+                                                      theta_6_if_singularity=thetas[-1])
+    robot2 = UR5()
+    elms = []
+    for solution in solutions:
+        robot2.set_joint_angles(*solution, rad=False)
+        if robot2.hitting_itself():
+            continue
+        xs, ys, zs, lines = robot2.vedo_elements()
+        elms.append((xs[-1], ys[-1], zs[-1], lines, robot2.meshes()))
+        break
+        # if not robot2.hitting_itself():
+        #     break
+    else:
+        raise AssertionError("No valid solution because of collisions")
+    vedo.show(elms, Point(robot.joints[-1].abs_tf.transl()), Point((0, 0, 0)),
+              axes=1,
+              interactive=True)
 
 
 def main3():  # shortest path example
+
     planner = PlanningModule()
     planner.shortest_path((0, 0, 0, 0, 0, 0), (0, -90, -90, 0, 90, 0))
     vedo.show(Sphere(r=.01), list(planner.vedo_elements()), axes=1, interactive=True)
 
 
 if __name__ == '__main__':
-    main3()
+    main2b()
     # viz online: https://robodk.com/robot/Universal-Robots/UR5#View3D
