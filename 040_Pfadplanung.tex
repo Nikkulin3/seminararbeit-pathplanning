@@ -32,11 +32,15 @@ Der für die Pfadplanung relevante Bereich ist demzufolge der in Gleichung~\ref{
 \end{equation}
 
 Je nach Algorithmus muss der Konfigurationsraum allerdings nicht im vorhinein berechnet werden.
+Um den Kollisionsraum abzubilden wurde der Roboter in dieser Arbeit mit Kugeln und Zylindern in den Dimensionen des UR5 approximiert und in fünf-Grad Schritten jede Position auf Eigenkollision getestet, damit Pfadplanungsalgorithmen schneller auf ihre Funktionsweise hin untersucht werden können.
+
+?? Code
 
 ??Quelle
 
 % todo berechnung/beschreibung von collision detection mit bb / trees
 https://www.geometrictools.com/Documentation/DynamicCollisionDetection.pdf
+
 
 \section{Berechnungsmethoden}
 
@@ -59,10 +63,38 @@ Zu beachten sind zudem die Rechenregeln der Quaternionen, die hier nicht näher 
 
 ?? Quelle
 
-\subsection{Zellendekomposition}
-Zellendekomposition (Vollständige Abtastung)
+\subsection{Zellendekomposition}\label{subsec:zellendekomposition}
+?? Quelle
+
+In der Zellendekomposition wird der freie Konfigurationsraum $C_{free}$ in kleinere Felder, sog.\ Zellen unterteilt.
+Zwei Konfigurationen liegen genau dann in der gleichen Zelle, falls ein Übergang zwischen den beiden Zuständen kollisionsfrei möglich ist und zwei benachbarte Zellen müssen über einen einfachen Pfad miteinander kollisionsfrei verbunden sein.
+Dies setzt konvexe Zellen voraus, bei denen jeder Punkt innerhalb der Zelle jeden anderen erreichen kann.
+Auf Basis dieser Gruppierungen kann dann ein Konnektivitätsgraph oder eine Roadmap erstellt werden.
+
+Diese direkte Berechnung der Zellenstruktur ist im sechsdimensionalen Fall des UR5 allerdings nichttrival und aufwändig.
+Aus diesem Grund und für die schnellere Berechnung wird deshalb oftmals eine approximierte Lösung bevorzugt.
+Dazu kann ein kd-Tree verwendet werden, der ein Konfigurationsraum als Baum so abbildet, dass Abstände und benachbarte Zellen zügig berechnet werden können.
+Im zweidimensionalen Raum werden hierfür die Positionen und Dimensionen von Quadraten sowie dessen Nachbarn gespeichert.
 
 \subsection{Sampling-Verfahren}
+?? Quelle
+
+In Sampling-basierten Verfahren wird das Erstellen einer Datenstruktur, die das Problem vollständig abdeckt, übersprungen und stattdessen nur einzelne, benötigte Konfigurationen auf Kollision geprüft.
+Das bedeutet, dass nicht, wie in Abschnitt~\ref{subsec:zellendekomposition} alle Lösungen für alle Probleme generalisiert werden sollen, sondern eine einzelne Lösung für ein einzelnes Problem gesucht ist.
+Bedingung dafür ist allerdings eine Möglichkeit, eine Konfiguration schnell auf Kollisionsfreiheit zu überprüfen.
+Insofern der Konfigurationsraum wie in Abschnitt~\ref{sec:konfigurationsraum} schon zuvor berechnet wurde, kann alternativ ein Lookup-Table verwendet werden.
+Dabei kann zwischen Single- und Multi-Query-Verfahren unterschieden werden.
+
+Bei Single-Query-Verfahren wird für jede Abfrage ein neuer Weg gesucht, bei Multi-Query-Verfahren werden vergangene Anfragen als Hilfestellung für neue Anfragen genutzt und so eine Roadmap erzeugt.
+Üblicherweise wird beim Single-Query-Verfahren mit Startkonfiguration $q_a$ und Zielkonfiguration $q_b$ wie folgt vorgegangen:
+\begin{enumerate}
+    \item Initalisierung eines Graphens $G(V, E)$ mit Knoten mit $V=\left\{ q_a, q_b \right\}$ und $E=\left\{  \right\}$
+    \item Auswahl eines Expansionsknotens aus $V$ mit einem gewählten Algorithmus
+    \item Berechnung eines neuen Knotens und einer Kante mit einem gewählten Algorithmus (inklusive Kollisionsüberprüfung)
+    \item Erweiterung des Graphens mit zuvor gefundenem Knoten und neuer Kante (falls möglich).
+    \item Prüfe auf Lösung in G (Verbindung von Start und Zielknoten) oder wiederhole ab 2.
+\end{enumerate}
+
 Single-Query
 Unidirektional vs. Bidirektional
 RRT

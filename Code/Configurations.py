@@ -1,0 +1,92 @@
+import pickle
+
+import numpy as np
+
+from Robots import UR5
+
+
+class ConfigurationSpace:
+    def __init__(self):
+        self.resolution = 10
+
+        try:
+            self.obstacle_space = self.load_previous()
+            self.free_space = [x[1:-1] for x in self.__problem_generator() if x not in self.obstacle_space]
+        except FileNotFoundError:
+            self.obstacle_space = []
+            self.free_space = []
+        self.robot = UR5()
+        self.obstacle_space = set([x[1:-1] for x in self.obstacle_space])
+        # self.obs_tree = KDTree(self.obstacle_space)
+        # self.free_tree = KDTree(self.free_space)
+        #
+        # self.allowed = {}
+        #
+        # for i, j in self.free_tree.query_pairs(self.resolution):
+        #     if i not in self.allowed:
+        #         self.allowed[i] = []
+        #     self.allowed[i].append(j)
+        #
+        # pass
+
+    @staticmethod
+    def load_previous():
+        with open("obstacle_space.pkl", "rb") as f:
+            return set(pickle.load(f))
+
+    def __problem_generator(self):
+        resolution_degrees = self.resolution
+        t1, t6 = 0, 0
+        # for t1 in range(0, 360, resolution_degrees): # t1 does not matter
+        for t2 in range(0, 360, resolution_degrees):
+            for t3 in range(0, 360, resolution_degrees):
+                for t4 in range(0, 360, resolution_degrees):
+                    for t5 in range(0, 360, resolution_degrees):
+                        # for t6 in range(0, 360, resolution_degrees): # t6 does not matter
+                        yield t1, t2, t3, t4, t5, t6
+
+    def calculate(self):
+        from pathos.multiprocessing import ProcessingPool as Pool, cpu_count
+
+        pool = Pool(processes=cpu_count())
+
+        def solver(problem):
+            robot = UR5()
+            robot.set_joint_angles(*problem, rad=False)
+            if robot.hitting_itself():
+                print(problem)
+                return problem
+            return None
+
+        problems = list(self.__problem_generator())
+        results = pool.map(solver, problems)
+        solution = [r for r in results if r is not None]
+        with open("obstacle_space.pkl", "wb") as f:
+            pickle.dump(solution, f)
+        self.obstacle_space = solution
+        # n = 0
+        # t0 = time()
+        # tot = int(360 / resolution_degrees) ** 6
+        # n += 1
+        # for problem in problem_generator():
+        #     t1 = time()
+        #     if t1 - t0 > 2:
+        #         t0 = t1
+        #         print(
+        #             f"{n}/{tot} ({np.round(n / tot * 100, 2)}%), found: {len(self.obstacle_space)}")
+        #     self.robot.set_joint_angles(*problem, rad=False)
+        #     if self.robot.hitting_itself():
+        #         self.obstacle_space.add(problem)
+        print("done")
+
+    def in_obs_space(self, thetas, rad, res=10):
+        new_thetas = []
+        if rad:
+            thetas = np.rad2deg(thetas)
+        for i, t in enumerate(thetas):
+            if i == 0 or i == 5:
+                new_thetas.append(0)
+            else:
+                rounded_theta = int(res * np.round(t / res)) % 360
+                new_thetas.append(rounded_theta)
+        return tuple(new_thetas[1:-1]) in self.obstacle_space
