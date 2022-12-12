@@ -1,3 +1,5 @@
+import pickle
+from time import time
 from typing import Optional, Union, List, Tuple
 
 import numpy as np
@@ -174,6 +176,7 @@ class UR5:
         if not rad:
             thetas = np.deg2rad(thetas)
         for j, theta in zip(self.joints, thetas):
+            assert np.deg2rad(-360) <= theta <= np.deg2rad(360)
             j.move_to(theta)
             if prev is None:
                 j.set_abs_tf(T(np.identity(4)))
@@ -308,37 +311,56 @@ class UR5:
             return self.vedo_meshes
 
         def c(b, t, d):
-            return Cylinder(pos=[b, t], r=d, c="grey").wireframe()
+            return Cylinder(pos=[b, t], r=d, c="grey").opacity(.2)
 
         def s(x, r):
-            return Sphere(pos=x, r=r, c="grey").wireframe()
+            return Sphere(pos=x, r=r, c="grey").opacity(.2)
 
         d1, d2, d3, d4, d5, d6 = [self.joints[i].d for i in range(6)]
-        # a1, a2, a3, a4, a5, a6 = [self.joints[i].a for i in range(6)]
+        a1, a2, a3, a4, a5, a6 = [self.joints[i].a for i in range(6)]
         shoulder_width = d4 / 2 - .01
+        shoulder_dist = d4 * 1.2
         underarm_width = .75 * shoulder_width
         xs, ys, zs, _ = self.vedo_elements()
-        # dx = [(x.top - x.base) for x in xs]
-        # dx = [x / np.linalg.norm(x) for x in dx]
+        dx = [(x.top - x.base) for x in xs]
+        dx = [x / np.linalg.norm(x) for x in dx]
         # dy = [(y.top - y.base) for y in ys]
         # dy = [y / np.linalg.norm(y) for y in dy]
         dz = [(z.top - z.base) for z in zs]
         dz = [z / np.linalg.norm(z) for z in dz]
+        wrist_width = d4
+        links = [
+            xs[0].base,
+            xs[1].base,
+            xs[1].base + dz[2] * shoulder_dist,
+            xs[3].base + dz[2] * shoulder_dist,
+            xs[3].base,
+            xs[4].base - dz[4] * wrist_width
+        ]
+
         meshes = [
-            c(xs[0].base, xs[1].base, shoulder_width),
-            s(xs[1].base, shoulder_width),
-            c(xs[1].base, xs[1].base + dz[2] * shoulder_width * 2, shoulder_width),
-            s(xs[1].base + dz[2] * shoulder_width * 2, shoulder_width),
-            c(xs[1].base + dz[2] * shoulder_width * 2, xs[3].base + dz[2] * shoulder_width * 2, shoulder_width),
-            s(xs[3].base + dz[2] * shoulder_width * 2, shoulder_width),
-            c(xs[3].base + dz[2] * shoulder_width * 2, xs[3].base, underarm_width),
-            s(xs[3].base, underarm_width),
-            c(xs[3].base, xs[4].base, underarm_width),
+            c(links[0], links[1], shoulder_width),  # base
+            s(links[1], shoulder_width),
+            # side extrusion to ellbow (shoulder)
+            c(links[1], links[2], shoulder_width),
+            s(links[2], shoulder_width),
+            # extrude back over shoulder at elbow
+            c(links[2], links[3], shoulder_width),
+            s(links[3], shoulder_width),
+            c(links[3], links[4], underarm_width),
+            s(links[4], underarm_width),
+            c(links[4], links[5], underarm_width),
+            s(links[5], underarm_width),
+            c(links[5], xs[4].base, underarm_width),
             s(xs[4].base, underarm_width),
             c(xs[4].base, xs[5].base, underarm_width),
             s(xs[5].base, underarm_width),
             c(xs[5].base, xs[6].base, underarm_width),
         ]
+        for m in meshes:
+            if type(m) is Cylinder:
+                for _ in range(2):
+                    m.subdivide(1, 1)
         self.vedo_meshes = meshes
         return meshes
 
@@ -346,25 +368,39 @@ class UR5:
         meshes = self.meshes()
 
         def distance(actor, other_actor) -> float:
-            actor = vedo.Points(actor.points())
-            distances = actor.distance_to(other_actor, signed=True).pointdata["Distance"]
+            distances = actor_test_pts[actor].distance_to(other_actor, signed=True).pointdata["Distance"]
             index = np.argmin(distances)
             return distances[index]
 
+        def center_dist(actor, other_actor):
+            return np.linalg.norm(np.array(actor.GetCenter()) - other_actor.GetCenter())
+
         def intersect(one_actor, other_actor):
+            if center_dist(one_actor, other_actor) > (one_actor.diagonal_size() + other_actor.diagonal_size()) / 2:
+                return False
             return distance(one_actor, other_actor) < min_dist and distance(other_actor, one_actor) < min_dist
 
+        actor_test_pts = {}
+        for m in meshes:
+            pts = m.points()
+            np.random.shuffle(pts)
+            pts = pts[::int(max(1., len(pts) / 30))]
+            actor_test_pts[m] = vedo.Points(pts)
         # intersecting
         min_dist = -.01
-        for i, mesh in enumerate(meshes):
-            j0 = i + 3
-            for j, mesh2 in enumerate(meshes[j0:]):
-                j += j0
-                if j == 4 and i == 0:
-                    continue
-                intersects = intersect(mesh, mesh2)
-                if intersects:
-                    return True
+        to_test = [
+            (1, 9),  # oder (2, 8) for cylinder collision
+            (4, 10),
+            (2, 13),
+            (2, 14),
+            (3, 13),
+            (3, 14),
+        ]
+
+        for i, j in to_test:
+            intersects = intersect(meshes[i], meshes[j])
+            if intersects:
+                return True
         return False
 
     def vedo_elements(self):
@@ -399,6 +435,76 @@ class UR5:
 
     def get_endeffector_transform(self):
         return self.joints[-1].abs_tf
+
+
+class ConfigurationSpace:
+    def __init__(self):
+        try:
+            self.obstacle_space = self.load_previous()
+        except FileNotFoundError:
+            self.obstacle_space = set()
+        self.robot = UR5()
+
+    @staticmethod
+    def load_previous():
+        with open("obstacle_space.pkl", "rb") as f:
+            return set(pickle.load(f))
+
+    def calculate(self, resolution_degrees=30):
+        from pathos.multiprocessing import ProcessingPool as Pool, cpu_count
+
+        pool = Pool(processes=cpu_count())
+
+        def problem_generator():
+            t1, t6 = 0, 0
+            # for t1 in range(0, 360, resolution_degrees): # t1 does not matter
+            for t2 in range(0, 360, resolution_degrees):
+                for t3 in range(0, 360, resolution_degrees):
+                    for t4 in range(0, 360, resolution_degrees):
+                        for t5 in range(0, 360, resolution_degrees):
+                            # for t6 in range(0, 360, resolution_degrees): # t6 does not matter
+                            yield t1, t2, t3, t4, t5, t6
+
+        def solver(problem):
+            robot = UR5()
+            robot.set_joint_angles(*problem, rad=False)
+            if robot.hitting_itself():
+                print(problem)
+                return problem
+            return None
+
+        problems = list(problem_generator())
+        results = pool.map(solver, problems)
+        solution = [r for r in results if r is not None]
+        with open("obstacle_space.pkl", "wb") as f:
+            pickle.dump(solution, f)
+        self.obstacle_space = solution
+        # n = 0
+        # t0 = time()
+        # tot = int(360 / resolution_degrees) ** 6
+        # n += 1
+        # for problem in problem_generator():
+        #     t1 = time()
+        #     if t1 - t0 > 2:
+        #         t0 = t1
+        #         print(
+        #             f"{n}/{tot} ({np.round(n / tot * 100, 2)}%), found: {len(self.obstacle_space)}")
+        #     self.robot.set_joint_angles(*problem, rad=False)
+        #     if self.robot.hitting_itself():
+        #         self.obstacle_space.add(problem)
+        print("done")
+
+    def in_obs_space(self, thetas, rad, res=10):
+        new_thetas = []
+        if rad:
+            thetas = np.rad2deg(thetas)
+        for i, t in enumerate(thetas):
+            if i == 0 or i == 5:
+                new_thetas.append(0)
+            else:
+                rounded_theta = int(res * np.round(t / res)) % 360
+                new_thetas.append(rounded_theta)
+        return new_thetas in self.obstacle_space
 
 
 class PlanningModule:
@@ -482,7 +588,7 @@ def main2():  # inverse kinematics example
 
 
 def main2b():
-    thetas = (0, -90, -180, 0, 90, 0)
+    thetas = (0, -23, -146, 173, -95, 181)
     robot = UR5()
     robot.set_joint_angles(*thetas, rad=False)
 
@@ -491,28 +597,44 @@ def main2b():
     robot2 = UR5()
     elms = []
     for solution in solutions:
-        robot2.set_joint_angles(*solution, rad=False)
-        if robot2.hitting_itself():
-            continue
+        if robot.hitting_itself():
+            robot2.set_joint_angles(*solution, rad=False)
+            if robot2.hitting_itself():
+                continue
+        else:
+            robot2 = robot
         xs, ys, zs, lines = robot2.vedo_elements()
-        elms.append((xs[-1], ys[-1], zs[-1], lines, robot2.meshes()))
+        elms.append(
+            (xs[-1], ys[-1], zs[-1], lines, robot2.meshes(), robot2.vedo_elements(),
+             [Point(m.center_of_mass()) for m in robot2.meshes()]))
+        print(np.round(np.rad2deg(robot2.get_joint_angles()), 1))
         break
         # if not robot2.hitting_itself():
         #     break
     else:
         raise AssertionError("No valid solution because of collisions")
-    vedo.show(elms, Point(robot.joints[-1].abs_tf.transl()), Point((0, 0, 0)),
+    vedo.show(elms, Point(robot.joints[-1].abs_tf.transl(), c="blue"), Point((0, 0, 0), c="blue"),
               axes=1,
               interactive=True)
 
 
 def main3():  # shortest path example
-
+    c = ConfigurationSpace()
+    # c.calculate(10)
+    robot2 = c.robot
+    c.in_obs_space((5, 5, 5, 5, 5, 5), False)
+    obs = list(c.obstacle_space)
+    for i in range(100):
+        robot2.set_joint_angles(obs[np.random.randint(0, len(obs))], rad=False)
+        elms = (robot2.meshes(), robot2.vedo_elements(),
+                [Point(m.center_of_mass()) for m in robot2.meshes()])
+        vedo.show(elms, Point(robot2.joints[-1].abs_tf.transl(), c="blue"), Point((0, 0, 0), c="blue"), axes=1,
+                  interactive=True, new=True)
     planner = PlanningModule()
     planner.shortest_path((0, 0, 0, 0, 0, 0), (0, -90, -90, 0, 90, 0))
     vedo.show(Sphere(r=.01), list(planner.vedo_elements()), axes=1, interactive=True)
 
 
 if __name__ == '__main__':
-    main2b()
+    main3()
     # viz online: https://robodk.com/robot/Universal-Robots/UR5#View3D
