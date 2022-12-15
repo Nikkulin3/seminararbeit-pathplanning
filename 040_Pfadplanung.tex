@@ -43,11 +43,11 @@ https://www.geometrictools.com/Documentation/DynamicCollisionDetection.pdf
 
 
 \section{Berechnungsmethoden}
-
-\subsection{Kürzester Weg}\label{subsec:kurzester-weg}
-
-In dieser Berechnungsmethode werden Position und Orientierung des Endeffektors linear zwischen zwei oder mehr Transformationen $T_1$ und $T_2$ verändert.
-Für die Translation zwischen $P_1$ und $P_2$ kann für jeden Schritt ein Faktor $t \in \left[0,1\right]$ multipliziert werden (Gleichung~\ref{eq:shortest-path-1}).
+%
+%\subsection{Kürzester Weg}\label{subsec:kurzester-weg}
+Im einfachsten Fall soll der Roboter auf kürzestem Weg in eine Zielposition fahren.
+Dabei wird die Wegstrecke meist linear in mehrere Zwischentransformationen zwischen zwei oder mehr Transformationen $T_1$ und $T_2$ aufgeteilt.
+Für die Translation von Punkt $P_1$ und Punkt $P_2$ kann für jeden Schritt ein Faktor $t \in \left[0,1\right]$ multipliziert werden (Gleichung~\ref{eq:shortest-path-1}).
 Zwischen zwei Rotationen $R_1$ und $R_2$ wird in der Regel der sog.\ Slerp verwendet (Gleichung~\ref{eq:shortest-path-2}).
 Dabei müssen die Rotationen der allerdings erst in Quaternionen $Q_1$ und $Q_2$ umgerechnet werden.
 Zu beachten sind zudem die Rechenregeln der Quaternionen, die hier nicht näher erklärt werden.
@@ -61,6 +61,10 @@ Zu beachten sind zudem die Rechenregeln der Quaternionen, die hier nicht näher 
     \label{eq:shortest-path-2}
 \end{equation}
 
+Die resultierende Liste an Endeffektor-Transformationen muss dann in den Konfigurationsraum des Roboters übersetzt werden.
+Beim UR5 gibt es, wie in Abschnitt~\ref{sec:geometrische-losung} berechnet, für jede Zwischentransformation oftmals bis zu acht, oder in einer Singularität sogar unendlich viele Stellungen für die Gelenke.
+Um einen geeigneten Pfad durch den Konfigurationsraum zu nehmen und die Selbstkollision sowie das Erreichen von Winkelbegrenzungen zu vermeiden, sollte deshalb ein Pfadplanungsalgorithmus zu Hilfe genommen werden.
+
 ?? Quelle
 
 \subsection{Zellendekomposition}\label{subsec:zellendekomposition}
@@ -70,20 +74,22 @@ In der Zellendekomposition wird der freie Konfigurationsraum $C_{free}$ in klein
 Zwei Konfigurationen liegen genau dann in der gleichen Zelle, falls ein Übergang zwischen den beiden Zuständen kollisionsfrei möglich ist und zwei benachbarte Zellen müssen über einen einfachen Pfad miteinander kollisionsfrei verbunden sein.
 Dies setzt konvexe Zellen voraus, bei denen jeder Punkt innerhalb der Zelle jeden anderen erreichen kann.
 Auf Basis dieser Gruppierungen kann dann ein Konnektivitätsgraph oder eine Roadmap erstellt werden.
+Als Datenstruktur kann ein KD-Tree verwendet werden, der ein Konfigurationsraum als Baum so abbildet, dass Abstände und benachbarte Zellen zügig berechnet werden können.
+Im zweidimensionalen Raum werden hierfür die Positionen und Dimensionen von Quadraten sowie dessen Nachbarn gespeichert.
 
 Diese direkte Berechnung der Zellenstruktur ist im sechsdimensionalen Fall des UR5 allerdings nichttrival und aufwändig.
-Aus diesem Grund und für die schnellere Berechnung wird deshalb oftmals eine approximierte Lösung bevorzugt.
-Dazu kann ein kd-Tree verwendet werden, der ein Konfigurationsraum als Baum so abbildet, dass Abstände und benachbarte Zellen zügig berechnet werden können.
-Im zweidimensionalen Raum werden hierfür die Positionen und Dimensionen von Quadraten sowie dessen Nachbarn gespeichert.
+Aus diesem Grund und für die schnellere Berechnung wird deshalb oftmals eine approximierte Lösung aus einem Sampling-Verfahren bevorzugt.
 
 \subsection{Sampling-Verfahren}
 ?? Quelle
 
-In Sampling-basierten Verfahren wird das Erstellen einer Datenstruktur, die das Problem vollständig abdeckt, übersprungen und stattdessen nur einzelne, benötigte Konfigurationen auf Kollision geprüft.
+In Sampling-basierten Verfahren wird das Gruppieren aller Konfigurationen in konkave Zellen übersprungen und stattdessen nur einzelne, benötigte Konfigurationen auf Kollision geprüft.
 Das bedeutet, dass nicht, wie in Abschnitt~\ref{subsec:zellendekomposition} alle Lösungen für alle Probleme generalisiert werden sollen, sondern eine einzelne Lösung für ein einzelnes Problem gesucht ist.
 Bedingung dafür ist allerdings eine Möglichkeit, eine Konfiguration schnell auf Kollisionsfreiheit zu überprüfen.
 Insofern der Konfigurationsraum wie in Abschnitt~\ref{sec:konfigurationsraum} schon zuvor berechnet wurde, kann alternativ ein Lookup-Table verwendet werden.
 Dabei kann zwischen Single- und Multi-Query-Verfahren unterschieden werden.
+
+\subsubsection{Single-Query}
 
 Bei Single-Query-Verfahren wird für jede Abfrage ein neuer Weg gesucht, bei Multi-Query-Verfahren werden vergangene Anfragen als Hilfestellung für neue Anfragen genutzt und so eine Roadmap erzeugt.
 Üblicherweise wird beim Single-Query-Verfahren mit Startkonfiguration $q_a$ und Zielkonfiguration $q_b$ wie folgt vorgegangen:
@@ -95,14 +101,32 @@ Bei Single-Query-Verfahren wird für jede Abfrage ein neuer Weg gesucht, bei Mul
     \item Prüfe auf Lösung in G (Verbindung von Start und Zielknoten) oder wiederhole ab 2.
 \end{enumerate}
 
-Single-Query
-Unidirektional vs. Bidirektional
-RRT
-biased / unbiased to exploration
-Q-space muss nicht vollständig bekannt sein
-RRT*
-Multi-Query
-Probabilistic Roadmaps
+Zudem kann der Algorithmus auf zwei oder mehr Suchbäume ausgeweitet werden, die sich nach einiger Zeit in der Mitte treffen.
+Dazu wird dann in den Schritten 2\-4 der verwendete Baum zufällig ausgewählt.
+
+Der \ac{rrt} ist ein häufig verwendeter Suchbaum in diesem Kontext.
+Hier wird zunächst wie in 3.\ eine neue Konfiguration zufällig gewählt und ab dem nächsten Knoten im Graphen eine Schrittweite in Richtung dieser Konfiguration gegangen.
+Um einen Bias gegenüber der Zielkonfiguration zu erzeugen, kann zudem mit einer gewissen Wahrscheinlichkeit der zufällig gewählte Knoten mit dem tatsächlichen Zielknoten ersetzt werden.
+Bei RRT$^*$ wird bei der Erweiterung zusätzlich auf andere Verbindungen des Graphens zum neu berechneten Knoten geprüft, was die Länge der kürzesten Verbindung zwischen Start und Ziel noch einmal minimiert.
+Die kürzeste Verbindung kann beispielsweise mithilfe von A$^*$ oder Dijkstra ermittelt werden.
+
+\subsubsection{Multi-Query}
+Bei Multi-Query Verfahren können bereits berechnete Kanten des aufgebauten Graphens wiederverwendet werden.
+Im Probabilistic-Roadmap-Algorithmus werden in einem ersten Schritt n zufällige Knotenpunkte erzeugt und dann mit ihren nächsten Nachbarn verbunden, insofern keine Kollision vorliegt.
+Im Anschluss werden Start- und Zielknoten ergänzt und ebenfalls Nachbarn als Kanten im Graphen hinzugefügt.
+Am Ende kann dann wieder mithilfe von A$^*$ oder Dijkstra ein kürzester Weg ermittelt werden.
+
+
+??
+
+%Single-Query
+%Unidirektional vs.\ Bidirektional
+%RRT
+%biased / unbiased to exploration
+%Q-space muss nicht vollständig bekannt sein
+%RRT*
+%Multi-Query
+%Probabilistic Roadmaps
 Potentialfeldmethode / Gradientenverfahren
 Genetische Algorithmen
 

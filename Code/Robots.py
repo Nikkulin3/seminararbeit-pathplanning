@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Tuple, Union
 
 import numpy as np
 import vedo
@@ -92,6 +92,7 @@ class UR5:
         self.joints = self.joints[1:]
         self.vedo_e = None
         self.vedo_meshes = None
+        self.color = np.random.random(3)
 
     def set_joint_angles(self, *thetas, rad=True):
         prev: Optional[Joint] = None
@@ -165,11 +166,12 @@ class UR5:
         p14 = tf14.transl()
         p14x, _, p14z = p14
         l_p14xz = np.linalg.norm((p14x, p14z))
+        arc_cos = (l_p14xz ** 2 - a2 ** 2 - a3 ** 2) / (2 * a2 * a3)
+        if not (-1 <= arc_cos <= 1):
+            return [np.nan], tf14, l_p14xz
+
         return [
-            sgn * np.arccos(
-                (l_p14xz ** 2 - a2 ** 2 - a3 ** 2) / (2 * a2 * a3)
-            )
-            for sgn in [-1, 1]
+            sgn * np.arccos(arc_cos) for sgn in [-1, 1]
         ], tf14, l_p14xz
 
     @staticmethod
@@ -187,7 +189,8 @@ class UR5:
     def calculate_inverse_kinematics(self, target_tf: T,
                                      return_one_solution=False,
                                      rad=True,
-                                     theta_6_if_singularity=0.):  # target tf relative to Joint zero transform of robot
+                                     theta_6_if_singularity=0.) -> Union[
+        Tuple[tuple, bool], Tuple[List[tuple], List[bool]]]:  # target tf relative to Joint zero transform of robot
         d1, d2, d3, d4, d5, d6 = [self.joints[i].d for i in range(6)]
         a1, a2, a3, a4, a5, a6 = [self.joints[i].a for i in range(6)]
         inverted_target_tf = ~target_tf
@@ -226,7 +229,7 @@ class UR5:
                     if return_one_solution:
                         if not rad:
                             solutions = np.rad2deg(solutions)
-                        return solutions[0], singularities[0]
+                        return tuple(solutions[0]), singularities[0]
 
         if not rad:
             solutions = np.rad2deg(solutions)
@@ -348,8 +351,7 @@ class UR5:
             ys.append(Arrow(*j.transform_vector((0, amplitude, 0), absolute_tf), c="green"))
             zs.append(Arrow(*j.transform_vector((0, 0, amplitude), absolute_tf), c="blue"))
         # print("----------------------------")
-        c = np.random.random(3)
-        lines = [Line(a.pos(), b.pos(), c=tuple(c), lw=5) for a, b in zip(zs, zs[1:])]
+        lines = [Line(a.pos(), b.pos(), c=tuple(self.color), lw=5) for a, b in zip(zs, zs[1:])]
         self.vedo_e = xs, ys, zs, lines
         return self.vedo_e
 
@@ -361,3 +363,46 @@ class UR5:
 
     def get_endeffector_transform(self):
         return self.joints[-1].abs_tf
+
+    def animate_configurations(self, list_of_configs, rad=True, plt=None, elm=None) -> Tuple[
+        vedo.Plotter, List[vedo.BaseActor]]:
+        self.set_joint_angles(*self.get_joint_angles(), rad=rad)
+        if elm is None:
+            a, b, c, d = self.vedo_elements()
+            elm = *a, *b, *c, *d, *self.meshes()
+        if plt is None:
+            plt = vedo.Plotter(interactive=False)
+            r = .75
+            axes = vedo.Axes(xrange=(-r, r), yrange=(-r, r), zrange=(0, r), xygrid=True)
+            plt += [__doc__, *elm, axes]
+            plt.show(resetcam=False, viewup='z')
+
+        for thetas in list_of_configs:
+            plt.remove(*elm)
+            self.set_joint_angles(thetas, rad=rad)
+            a, b, c, d = self.vedo_elements()
+            elm = *a, *b, *c, *d, *self.meshes()
+            plt.add(*elm)
+            plt.show(resetcam=False, viewup='z')
+
+        return plt, elm
+
+
+def main2b():
+    robot = UR5()
+    plt, elm = robot.animate_configurations([(i % 360, -23, -146, 173, -95, 181) for i in range(0, 360, 5)], rad=False)
+    plt, elm = robot.animate_configurations([(0, (-23 + i) % 360, -146, 173, -95, 181) for i in range(0, 360, 5)],
+                                            rad=False, plt=plt, elm=elm)
+    plt, elm = robot.animate_configurations([(0, -23, (-146 + i) % 360, 173, -95, 181) for i in range(0, 360, 5)],
+                                            rad=False, plt=plt, elm=elm)
+    plt, elm = robot.animate_configurations([(0, -23, -146, (173 + i) % 360, -95, 181) for i in range(0, 360, 5)],
+                                            rad=False, plt=plt, elm=elm)
+    plt, elm = robot.animate_configurations([(0, -23, -146, 173, (-95 + i) % 360, 181) for i in range(0, 360, 5)],
+                                            rad=False, plt=plt, elm=elm)
+    plt, elm = robot.animate_configurations([(0, -23, -146, 173, -95, (181 + i) % 360) for i in range(0, 360, 5)],
+                                            rad=False, plt=plt, elm=elm)
+    plt.interactive()  # keep current frame
+
+
+if __name__ == '__main__':
+    main2b()

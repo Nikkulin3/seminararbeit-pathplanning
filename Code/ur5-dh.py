@@ -2,6 +2,7 @@ import numpy as np
 import vedo
 from vedo import Sphere, Point
 
+from Code.PathPlanning import PlanningModule
 from Configurations import ConfigurationSpace
 from Robots import UR5
 
@@ -72,21 +73,74 @@ def main2b():
               interactive=True)
 
 
+class Graph:
+    def __init__(self, all_paths, exclude_over_angle_distance=25):
+
+        configs = ConfigurationSpace()
+        vertices = {}  # dict of { (configuration_tuple): vertex_index }
+        # connections = [] # list of (vertex_i, vertex_j, distance)
+        graph = {}
+
+        for node in all_paths:
+            for v in node:
+                vertices[v] = len(vertices)
+
+        for node, next_node in zip(all_paths, all_paths[1:]):
+            for i, config in enumerate(node):
+                vertex_i = vertices[config]
+                for next_config in next_node:
+                    vertex_j = vertices[next_config]
+                    if configs.in_obs_space(next_config, rad=False):
+                        continue
+                    distance = np.array(config) - next_config
+                    distance = np.abs(distance)
+                    distance = np.min([distance, np.abs(distance - 360)], axis=0)
+                    max_dist = np.max(distance)
+                    if max_dist > exclude_over_angle_distance:
+                        continue
+                    if vertex_i not in graph:
+                        graph[vertex_i] = {}
+                    graph[vertex_i][vertex_j] = np.round(max_dist, 1)
+        self.graph = graph
+        self.vertices_translation = {v: k for k, v in vertices.items()}
+
+    # A function used by dfs
+    def dfs_recursive(self, v, visited):
+        visited.add(v)
+        path = [v]
+        for i in self.graph[v].keys():
+            if i not in visited:
+                try:
+                    dfs = self.dfs_recursive(i, visited)
+                    path += dfs if dfs is not None else []
+                except KeyError:
+                    path += [i]
+        return path if path[-1] > list(self.graph.keys())[-1] else None
+
+    def dfs(self):
+        visited = set()
+        return self.dfs_recursive(list(self.graph.keys())[0], visited)
+
+    def translate(self, vertices_list):
+        return [self.vertices_translation[v] for v in vertices_list]
+
+
 def main3():  # shortest path example
-    c = ConfigurationSpace()
-    # c.calculate(10)
-    robot2 = c.robot
-    c.in_obs_space((5, 5, 5, 5, 5, 5), False)
-    obs = list(c.obstacle_space)
-    for i in range(100):
-        robot2.set_joint_angles(obs[np.random.randint(0, len(obs))], rad=False)
-        elms = (robot2.meshes(), robot2.vedo_elements(),
-                [Point(m.center_of_mass()) for m in robot2.meshes()])
-        vedo.show(elms, Point(robot2.joints[-1].abs_tf.transl(), c="blue"), Point((0, 0, 0), c="blue"), axes=1,
-                  interactive=True, new=True)
     planner = PlanningModule()
-    planner.shortest_path((0, 0, 0, 0, 0, 0), (0, -90, -90, 0, 90, 0))
-    vedo.show(Sphere(r=.01), list(planner.vedo_elements()), axes=1, interactive=True)
+    start = (0, 0, 0, 0, 0, 0)
+    planner.shortest_path(start, (0, -90, -90, 0, 90, 0), rad=False, number_of_points=100)
+    all_paths, singularities = planner.all_configurations_for_each_target_tf(rad=False)
+
+    g = Graph(all_paths, exclude_over_angle_distance=25)
+    path = g.dfs()
+    transl = [start] + g.translate(path)
+
+    plt, elms = None, None
+    while True:
+        plt, elms = planner.robot.animate_configurations(transl, plt=plt, elm=elms, rad=False)
+        # plt, elms = planner.robot.animate_configurations(planner.first_configuration_for_each_target_tf(), plt=plt,
+        #                                                  elm=elms)
+    # plt.interactive()  # freeze on last frame
 
 
 if __name__ == '__main__':
