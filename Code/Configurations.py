@@ -131,4 +131,14 @@ class ConfigurationSpace:
             else:
                 rounded_theta = self.round_theta(t)
                 new_thetas.append(rounded_theta)
-        return tuple(new_thetas[1:-1]) in self.obstacle_space
+
+        self_collision = tuple(new_thetas[1:-1]) in self.obstacle_space
+        return self_collision
+
+    def floor_collision(self, thetas, rad, floor_height=0):
+        margin = 10
+        self.robot.set_joint_angles(thetas, rad=rad)
+        for p in self.robot.get_joint_positions():
+            if p[-1] - margin < floor_height:
+                return True
+        return False

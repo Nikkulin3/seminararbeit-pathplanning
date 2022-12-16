@@ -83,7 +83,7 @@ class UR5:
         "alpha": (np.pi / 2, 0, 0, np.pi / 2, -np.pi / 2, 0)
     }
 
-    def __init__(self):
+    def __init__(self, thetas_rad=None):
         self.joints = [Joint.zero_joint()]
         DH = self.DH
         for i in range(6):
@@ -93,6 +93,8 @@ class UR5:
         self.vedo_e = None
         self.vedo_meshes = None
         self.color = np.random.random(3)
+        if thetas_rad is not None:
+            self.set_joint_angles(thetas_rad)
 
     def set_joint_angles(self, *thetas, rad=True):
         prev: Optional[Joint] = None
@@ -135,8 +137,6 @@ class UR5:
         p_06x, p_06y, p_06z = p_06
         sin, cos = np.sin, np.cos
         cos_val = (p_06x * sin(theta_1) - p_06y * cos(theta_1) - d4) / d6
-        if np.abs(np.abs(cos_val) - 1) < 1e-6:
-            return [np.arccos(int(cos_val))]
         return [
             sgn * (
                 np.arccos(cos_val) if -1 <= cos_val <= 1 else np.nan
@@ -199,6 +199,8 @@ class UR5:
         d1, d2, d3, d4, d5, d6 = [self.joints[i].d for i in range(6)]
         a1, a2, a3, a4, a5, a6 = [self.joints[i].a for i in range(6)]
         inverted_target_tf = ~target_tf
+        if not rad:
+            theta_6_if_singularity = np.deg2rad(theta_6_if_singularity)
 
         solutions = []
         singularities = []
@@ -238,6 +240,7 @@ class UR5:
 
         if not rad:
             solutions = np.rad2deg(solutions)
+        assert len(solutions) > 0, "unable to calculate any solution (out of reach)"
         return solutions, singularities
 
     def meshes(self) -> List[Mesh]:
@@ -369,12 +372,14 @@ class UR5:
     def get_endeffector_transform(self):
         return self.joints[-1].abs_tf
 
-    def animate_configurations(self, list_of_configs, rad=True, plt=None, elm=None) -> Tuple[
+    def animate_configurations(self, list_of_configs, rad=True, plt=None, elm=None, extras=None) -> Tuple[
         vedo.Plotter, List[vedo.BaseActor]]:
+        if extras is None:
+            extras = []
         self.set_joint_angles(*self.get_joint_angles(), rad=rad)
         if elm is None:
             a, b, c, d = self.vedo_elements()
-            elm = *a, *b, *c, *d, *self.meshes()
+            elm = *a, *b, *c, *d, *self.meshes(), *extras
         if plt is None:
             plt = vedo.Plotter(interactive=False)
             r = .75
@@ -386,7 +391,7 @@ class UR5:
             plt.remove(*elm)
             self.set_joint_angles(thetas, rad=rad)
             a, b, c, d = self.vedo_elements()
-            elm = *a, *b, *c, *d, *self.meshes()
+            elm = *a, *b, *c, *d, *self.meshes(), *extras
             plt.add(*elm)
             plt.show(resetcam=False, viewup='z')
 

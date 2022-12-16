@@ -42,10 +42,10 @@ class PlanningModule:
         for thetas in thetas_list:
             self.robot.set_joint_angles(thetas, rad=rad)
             tfs.append(self.robot.get_endeffector_transform())
-        self.targets = [tfs[0]] + self.slerp(tfs, number_of_points)
+        self.targets = [tfs[0]] + self.slerp(tfs, number_of_points) + [tfs[-1]]
         if not rad:
             thetas_list = np.deg2rad(thetas_list)
-        self.thetas_list = thetas_list
+        self.thetas_list = [t + np.random.rand() * 1e-10 for t in thetas_list]
         return self.targets
 
     def first_configuration_for_each_target_tf(self, rad=True):
@@ -64,7 +64,7 @@ class PlanningModule:
             all_paths.append([])
             t6 = t6_0 + (i + 1) / len(self.targets) * t6_delta
             for j, (configuration, singularity_found) in enumerate(
-                    zip(*self.robot.calculate_inverse_kinematics(tf, theta_6_if_singularity=t6))):
+                    zip(*self.robot.calculate_inverse_kinematics(tf, theta_6_if_singularity=t6, rad=True))):
                 if singularity_found:
                     singularities.append((i, j))
                 all_paths[-1].append(tuple(configuration))
