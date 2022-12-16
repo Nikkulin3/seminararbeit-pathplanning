@@ -136,9 +136,8 @@ class ConfigurationSpace:
         return self_collision
 
     def floor_collision(self, thetas, rad, floor_height=0):
-        margin = 10
         self.robot.set_joint_angles(thetas, rad=rad)
         for p in self.robot.get_joint_positions():
-            if p[-1] - margin < floor_height:
+            if p[-1] < floor_height:
                 return True
         return False

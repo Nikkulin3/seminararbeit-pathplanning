@@ -77,7 +77,9 @@ def main3():  # shortest path example
     planner = PlanningModule()
     start = (-45, 0, -90, 180, 90, 13)
     end = (-90, -180, 90, 180, 90, 13)
-
+    include_self_collision = True
+    include_floor_collision = True
+    loose_end_configuration = True
     pts = [[0, 0, 0],
            [0.5, 0.6, 0.8],
            [1, 1, 1]]
@@ -93,7 +95,7 @@ def main3():  # shortest path example
     meshes += [*r1.vedo_elements(), *r2.vedo_elements()]
     try:
         all_paths, singularities = planner.all_configurations_for_each_target_tf()
-        g = Graph(all_paths, rad=False, include_self_collision=False)
+        g = Graph(all_paths, rad=False, include_self_collision=include_self_collision, include_floor_collision=include_floor_collision)
     except AssertionError as e:
         print(e)
         vedo.show(*meshes, axes=1)
@@ -105,12 +107,13 @@ def main3():  # shortest path example
     print()
     print(np.round(np.rad2deg(all_paths[-1])))
     print()
-    paths, lengths = g.dijkstra(start_config=start, end_config=None)
+    paths, lengths = g.dijkstra(start_config=start, end_config=None if loose_end_configuration else end)
     assert len(paths) > 0
     plt, elms = None, None
     while True:
+        print(f"iterating {len(paths)} different movements...")
         for i, path in enumerate(paths):
-            print("version",i)
+            print("version",i, lengths[i])
             plt, elms = planner.robot.animate_configurations(g.translate(path)[::2], plt=plt, elm=elms, rad=False,
                                                              extras=meshes)
         # plt, elms = planner.robot.animate_configurations(planner.first_configuration_for_each_target_tf(), plt=plt,
