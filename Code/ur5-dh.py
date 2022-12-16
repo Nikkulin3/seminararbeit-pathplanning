@@ -75,8 +75,8 @@ def main2b():
 
 def main3():  # shortest path example
     planner = PlanningModule()
-    start = (0, -45, 10, 180, 90, 0)
-    end = (0, -90, -10, 180, 90, 0)
+    start = (45, -45, 45, 180, 90, 0)
+    end = (0, -180, 90, 180, 90, 0)
 
     pts = [[0, 0, 0],
            [0.5, 0.6, 0.8],

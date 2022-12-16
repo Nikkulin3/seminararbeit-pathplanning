@@ -3,18 +3,19 @@
 
 \chapter{Pfadplanung}\label{ch:pfadplanung}
 
-Bei der Pfadplanung geht es darum, eine Reihe an Konfigurationen zu berechnen, die den Weg von einer bestimmten Transformation in eine andere beschreiben.
-Eine einzelne Konfiguration ist im Falle des UR5 ein Tupel mit sechs Winkeln, die die Ausrichtung der sechs Gelenke des Roboters beschreiben.
+Pfadplanungsalgorithmen werden häufig in der Robotik und der Automatisierungstechnik eingesetzt, um Pfade für Roboter oder Maschinen zu beschreiben, die sich innerhalb eines bestimmten Arbeitsbereichs bewegen.
+Dabei werden eine Reihe an Konfigurationen zu berechnet, die den Weg von einer bestimmten Transformation in eine andere beschreiben.
+Eine einzelne Konfiguration ist im Falle des UR5 ein Tupel mit sechs Winkeln, das die Ausrichtung der sechs Gelenke des Roboters angibt.
 
-Die einfachste Form der Pfadplanung ist der kürzeste Weg zwischen zwei Punkten (Abschnitt~\ref{subsec:kurzester-weg}), die schnellste Verbindung ist immer der Weg der direkten Kinematik mit maximaler Winkelgeschwindigkeit bei der Bewegung (Abschnitt~\ref{ch:direkte-kinematik}).
+Die einfachste Form der Pfadplanung ist der kürzeste Weg zwischen zwei Punkten (Abschnitt~\ref{sec:berechnungsmethoden}), die schnellste Verbindung ist immer der Weg der direkten Kinematik mit maximaler Winkelgeschwindigkeit bei der Bewegung (Abschnitt~\ref{ch:direkte-kinematik}).
 Komplizierter wird es, wenn Beschränkungen im Arbeitsraum des Roboters, wie Kollisionen mit der Umgebung oder mit sich selbst, vorliegen.
 In diesem Fall muss ein komplizierteres Berechnungsverfahren herangezogen werden.
 
 In diesem Kapitel sollen die Grundlagen der Pfadplanung, sowie einige Algorithmen näher vorgestellt werden.
+Zudem wird in Abschnitt~\ref{sec:praxisbezug} eine einfache Implementierung der Pfadplanung vorgestellt, die ein Abfahren von Endeffektor-Stellungen ohne Selbstkollision ermöglicht.
 
 
 \section{Konfigurationsraum}\label{sec:konfigurationsraum}
-
 
 Der Konfigurationsraum $\mathit{C}$ stellt die Grundlage für die Algorithmen in der Pfadplanung dar und beschreibt alle möglichen Konfigurationen, die der Roboter einnehmen kann.
 Eine Konfiguration des UR5 ist dabei wie in Gleichung~\ref{eq:config-1} definiert, wobei die Winkelwerte $\theta_i$ durch ihre Maximal- und Minimalwerte des Datenblatts~\cite{universalrobotsUR5TechnicalSpecifications} von $\pm 360^{\circ}$ beschränkt sind.
@@ -31,8 +32,8 @@ Der für die Pfadplanung relevante Bereich ist demzufolge der in Gleichung~\ref{
     \label{eq:config-2}
 \end{equation}
 
-Je nach Algorithmus muss der Konfigurationsraum allerdings nicht im vorhinein berechnet werden.
-Um den Kollisionsraum abzubilden wurde der Roboter in dieser Arbeit mit Kugeln und Zylindern in den Dimensionen des UR5 approximiert und in fünf-Grad Schritten jede Position auf Eigenkollision getestet, damit Pfadplanungsalgorithmen schneller auf ihre Funktionsweise hin untersucht werden können.
+Je nach Algorithmus muss der Konfigurationsraum allerdings nicht im vorhinein berechnet werden, insbesondere wenn statische oder dynamische Hindernisse umfahren werden sollen.
+%Um den Kollisionsraum abzubilden wurde der Roboter in dieser Arbeit mit Kugeln und Zylindern in den Dimensionen des UR5 approximiert und in fünf-Grad Schritten jede Position auf Eigenkollision getestet, damit Pfadplanungsalgorithmen schneller auf ihre Funktionsweise hin untersucht werden können.
 
 ?? Code
 
@@ -42,14 +43,11 @@ Um den Kollisionsraum abzubilden wurde der Roboter in dieser Arbeit mit Kugeln u
 https://www.geometrictools.com/Documentation/DynamicCollisionDetection.pdf
 
 
-\section{Berechnungsmethoden}
-%
-%\subsection{Kürzester Weg}\label{subsec:kurzester-weg}
-Im einfachsten Fall soll der Roboter auf kürzestem Weg in eine Zielposition fahren.
-Dabei wird die Wegstrecke meist linear in mehrere Zwischentransformationen zwischen zwei oder mehr Transformationen $T_1$ und $T_2$ aufgeteilt.
-Für die Translation von Punkt $P_1$ und Punkt $P_2$ kann für jeden Schritt ein Faktor $t \in \left[0,1\right]$ multipliziert werden (Gleichung~\ref{eq:shortest-path-1}).
-Zwischen zwei Rotationen $R_1$ und $R_2$ wird in der Regel der sog.\ Slerp verwendet (Gleichung~\ref{eq:shortest-path-2}).
-Dabei müssen die Rotationen der allerdings erst in Quaternionen $Q_1$ und $Q_2$ umgerechnet werden.
+\section{Berechnungsmethoden}\label{sec:berechnungsmethoden}
+
+Um den Roboter auf dem kürzesten Weg zu einer Zielposition zu bringen, wird die Strecke oft in mehrere Zwischenstufen zwischen zwei oder mehr Transformationspunkten $T_1$ und $T_2$ unterteilt.
+Jeder Schritt kann dabei mithilfe des Faktors $t \in \left[0,1\right]$ beschrieben werden (Gleichung~\ref{eq:shortest-path-1}).
+Zwischen zwei Rotationspunkten $R_1$ und $R_2$  wird in der Regel der sogenannte Slerp verwendet  (Gleichung~\ref{eq:shortest-path-2}), der jedoch erst in Quaternionen (Q1 und Q2) umgerechnet werden muss.
 Zu beachten sind zudem die Rechenregeln der Quaternionen, die hier nicht näher erklärt werden.
 
 \begin{equation}
@@ -61,9 +59,9 @@ Zu beachten sind zudem die Rechenregeln der Quaternionen, die hier nicht näher 
     \label{eq:shortest-path-2}
 \end{equation}
 
-Die resultierende Liste an Endeffektor-Transformationen muss dann in den Konfigurationsraum des Roboters übersetzt werden.
-Beim UR5 gibt es, wie in Abschnitt~\ref{sec:geometrische-losung} berechnet, für jede Zwischentransformation oftmals bis zu acht, oder in einer Singularität sogar unendlich viele Stellungen für die Gelenke.
-Um einen geeigneten Pfad durch den Konfigurationsraum zu nehmen und die Selbstkollision sowie das Erreichen von Winkelbegrenzungen zu vermeiden, sollte deshalb ein Pfadplanungsalgorithmus zu Hilfe genommen werden.
+Die resultierende Liste von Endeffektor-Transformationen muss dann in den Konfigurationsraum des Roboters übertragen werden.
+Der UR5 hat, wie in Abschnitt~\ref{sec:geometrische-losung} berechnet, für jede Zwischentransformation oftmals bis zu acht, oder in einer Singularität sogar unendlich viele Stellungen für die Gelenke.
+Um einen geeigneten Pfad durch den Konfigurationsraum zu nehmen und die Selbstkollision sowie das Erreichen von Winkelbegrenzungen zu vermeiden, sollte deshalb ein Pfadplanungsalgorithmus verwendet werden.
 
 ?? Quelle
 
@@ -131,9 +129,22 @@ Potentialfeldmethode / Gradientenverfahren
 Genetische Algorithmen
 
 
-\section{Constraints und Praxisbezug}
+\section{Praxisbezug}\label{sec:praxisbezug}
 Kinematisch (Winkelbegrenzung)
 Dynamisch (Geschwindigkeit)
 Einbezug der Constraints in den Algorithmen
 Praxis: OMPL (MoveIt+ ROS / Copelliasim Plugin)
+
+Pfadplanungsalgorithmen können dazu beitragen, komplexe Pfade in einem Konfigurationsraum zu beschreiben.
+ROS (Robot Operating System) und CopelliaSim bieten bereits Frameworks, die dieses Problem lösen.
+
+Da in dieser Arbeit der Schwerpunkt auf der Selbstkollision bei der Pfadplanung liegen soll und die inverse Kinematik nahezu ohne Singularitäten direkt berechnet werden kann, kann ein deutlich vereinfachter Algorithmus verwendet werden, bei dem der gesamte Konfigurationsraum auf einmal betrachtet werden kann.
+Aus diesen Gründen wurde in der Implementierung eine Bibliothek für das Überprüfen von Selbstkollisionen angelegt, in der alle möglichen Transformationen des UR5 auf fünf Grad genau abgespeichert sind.
+
+Im implementierten Algorithmus kann zunächst für jede Zwischentransformation, die in Abschnitt~\ref{sec:berechnungsmethoden} beschrieben wurde, mithilfe der inversen Kinematik aus Abschnitt~\ref{ch:inverse-kinematik} eine Liste möglicher Zwischenkonfigurationen erstellt werden.
+Dabei werden Konfigurationen, bei denen eine Kollision besteht, entfernt und Singularitäten durch das Addieren eines kleinen Werts $\epsilon$ umgangen.
+
+Anschließend wird ein Graph erstellt, dessen Knoten die Konfigurationen der Zwischentransformationen darstellen, die Kanten die Übergänge zwischen diesen Konfigurationen beschreiben und deren Kantenlängen die Summe der Winkeldifferenzen aller Konfigurationen benachbarter Zeitschritte ausweisen.
+Nachdem der Graph erstellt wurde, müssen alle Knoten, die nicht vom Startknoten erreichbar sind, mithilfe einer Breitensuche entfernt werden.
+Danach kann zum Beispiel mit Dijkstra der kürzeste Weg im Graph beschrieben werden, der in diesem Fall genau den Weg darstellt, bei dem sich die Gelenke am wenigsten bewegen müssen.
 

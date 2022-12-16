@@ -3,7 +3,7 @@
 
 \chapter{Direkte Kinematik}\label{ch:direkte-kinematik}
 
-Die direkte Kinematik ist dafür verantwortlich aus den verschiedenen Winkeln und Positionen der Gelenke die Rotation und Position des Endeffektors im Raum zu berechnen.
+Die direkte Kinematik ist dafür verantwortlich, aus den verschiedenen Winkeln und Positionen der Gelenke die Rotation und Position des Endeffektors im Raum zu berechnen.
 Dazu wird zunächst in jedem Gelenk ein Koordinatenursprung gelegt, der eine Nullstellung jedes Gelenks beschreibt.
 Um alle Gelenke in einer kinematischen Kette abzubilden, kann mit einem Parameter in den Freiheitsgraden des entsprechenden Gelenks eine Rechenvorschrift aufgebaut werden, um den Roboter zu beschreiben und die Position des Endeffektors schnell bestimmen zu können.
 
@@ -24,9 +24,14 @@ Ein Beispiel hierfür findet sich in Gleichung~\ref{eq:inv-rule2}.
 \begin{equation}
     T_{b,a} = \left( T_{a,b} \right)^{-1} =
     \begin{bmatrix}
+        \left(R_{a,b}\right)^T & - \left(R_{a,b}\right)^T P_{a,b} \\
+        0^T     & 1
+    \end{bmatrix} =
+    \begin{bmatrix}
         R_{b,a} & - R_{b,a}P_{a,b} \\
         0^T     & 1
-    \end{bmatrix} \label{eq:inv-rule1}
+    \end{bmatrix}
+    \label{eq:inv-rule1}
 \end{equation}
 \begin{equation}
     T_{a,b}\cdot T_{b,c}=T_{a,c}    \label{eq:inv-rule2}
@@ -38,9 +43,9 @@ Ein Beispiel hierfür findet sich in Gleichung~\ref{eq:inv-rule2}.
 ?? Quelle
 
 
-Die Konvention, die in der Regel verwendet wird, um Rotation und Translation eines Gliedes der kinematischen Kette darzustellen ist die sog.\ \ac{dhk} oder DH-Transformation.
-\ac{dhk} beschreibt, wie die Koordinatensysteme basieren auf dem vorherigen Koordinatensystem beschrieben werden~\cite{denavitKinematicNotationLowerPair1955,craigIntroductionRoboticsMechanics2009}.
-Um nun ausgehend von Gelenk $n-1$ das Koordinatensystem von Gelenk $n$ zu beschreiben, müssen die folgenden Regeln befolgt werden:
+Um Rotation und Translation eines Gliedes der kinematischen Kette darzustellen kann die sog.\ DH-Konvention oder auch DH-Transformation verwendet werden.
+Diese Konvention beschreibt ein standardisiertes Vorgehen wie die Transformation des nächsten Gelenks im Koordinatensystem des momentanen Gelenks ausgedrückt werden soll~\cite{denavitKinematicNotationLowerPair1955,craigIntroductionRoboticsMechanics2009}.
+Es gelten die folgenden Regeln:
 
 \begin{enumerate}
     \item Achse $z_{n}$ liegt entlang der Bewegungsachse des Gelenks $n$
@@ -125,7 +130,7 @@ Für den beweglichen Freiheitsgrad der Gelenke wird dann jeweils eine freie Vari
 \begin{figure}[h]
     \centering
     \includegraphics[width = .5\textwidth]{Bilder/Denavit-Hartenberg-Transformation.svg}
-    \caption{\ac{dhk} zwischen zwei Gelenken~\cite{jahobrCoordinateSystemsDenavitHartenberg2007}}\label{fig:dh-konvention1}
+    \caption{DH-Konvention zwischen zwei Gelenken~\cite{jahobrCoordinateSystemsDenavitHartenberg2007}}\label{fig:dh-konvention1}
 \end{figure}
 
 Oftmals wird in der Literatur auch eine alternative, modifizierte Form der DH-Parameter verwendet~\cite[75]{craigIntroductionRoboticsMechanics2009}.
@@ -146,14 +151,13 @@ Dabei verändert sich die Transformationsmatrix eines Gelenks auf die Werte aus 
 
 \section{Unified Robot Description Format}\label{sec:urdf}
 
-\ac{urdf} ist ein Standard entwickelt für \ac{ros}, um sowohl die geometrischen als auch physische und visuelle Eigenschaften eines Roboters zu beschreiben.
-Für die Beschreibung ist eine auf XML basierende Datei nötig, die mit Tags geschachtelt den Roboter mithilfe von sog. \enquote{Links} und \enquote{Joints} beschreibt~\cite{ros.orgUrdfXMLModel}.
+Das \ac{urdf} ist ein Standard, entwickelt für \ac{ros}, der sowohl die geometrischen als auch physischen und visuellen Eigenschaften eines Roboters beschreiben kann.
+Dafür ist eine auf XML basierende Datei nötig, die mithilfe von XML-Tags den Roboter aus sog. \enquote{Links} und \enquote{Joints} aufbaut~\cite{ros.orgUrdfXMLModel}.
 
-Links beschreiben die physischen Verbindungen zwischen zwei Gelenken.
-Dabei wird unterschieden zwischen visuellen Eigenschaften (\enquote{visual}), Kollisionseigenschaften (\enquote{collision}) und Trägheitseigenschaften (\enquote{inertial}).
-Jede dieser Kategorien kann so die Geometrie des Links aus verschiedenen Perspektiven unterschiedlich beschreiben
+Links sind die physischen Verbindungen zwischen zwei Gelenken und können verschiedene Eigenschaften aufweisen.
+Neben den dem geometrischen Aufbau wird zudem unterschieden zwischen visuellen Eigenschaften (\enquote{visual}), Kollisionseigenschaften (\enquote{collision}) und Trägheitseigenschaften (\enquote{inertial}).
 
-Joints bezeichnen Gelenke, also die Verbindungen zweier Links und beschreiben die mögliche relative Bewegung zwischen diesen.
+Joints sind Gelenke, die aus der Verbindung zweier physischer Links bestehen.
 Dabei sind nicht nur translatorische (\enquote{prismatic}) und rotatorische Gelenke (\enquote{revolute}) beschreibbar, sondern auch feste (\enquote{fixed}), schwebende (\enquote{floating}) und planare Verbindungen (\enquote{planar}).
 Für die Beschreibung eines Joints wird der vorhergehende Link als \enquote{parent} und der nächste Link als \enquote{child} bezeichnet.
 Zudem müssen im Feld \enquote{origin} Translation und Rotation des Ursprungs im Koordinatensystem des Parent Links, sowie im Feld \enquote{axis} je nach Gelenk die Rotationsachse, Translationsachse oder Normale der Bewegungsoberfläche angegeben werden.

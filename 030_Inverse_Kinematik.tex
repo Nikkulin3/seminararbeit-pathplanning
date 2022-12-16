@@ -1,16 +1,15 @@
 \cleardoublepage
 
 
-\chapter{Inverse Kinematik}
+\chapter{Inverse Kinematik}\label{ch:inverse-kinematik}
 
 In der direkte Kinematik wird aus den Gelenkzuständen Position und Rotation des Endeffektors bestimmt.
 Der umgekehrte Vorgang, also das Berechnen der Gelenkpositionen bei gegebener Zieltransformation, wird als inverse Kinematik bezeichnet.
 Dies ist erforderlich, um Aufgaben in der Umgebung des Roboters zu lösen und die angestrebten Zielpunkte zu erreichen.
-Dabei muss beachtet werden, dass oft mehrere gleichwertige Lösungen für eine Zielstellung des Endeffektors vorliegen.
-Allerdings kann die inverse Kinematik offener Ketten oft nicht einfach direkt mithilfe einer mathematischen Formel gelöst werden (siehe Abschnitt~\ref{sec:analytische-losung}).
+Dabei muss beachtet werden, dass oft mehrere gleichwertige Lösungen für eine Zielstellung des Endeffektors vorliegen und die inverse Kinematik offener Ketten oft nicht einfach direkt mithilfe einer mathematischen Formel gelöst werden kann (siehe Abschnitt~\ref{sec:analytische-losung}).
 Im Fall des UR5, ist dies allerdings in den meisten Fällen möglich.
 
-Die Lösung des Problems kann geometrisch, analytisch oder numerisch gelöst werden.
+Die Lösung des Problems kann geometrisch, analytisch oder numerisch ermittelt werden.
 Auf die ersten beiden Lösungsmöglichkeiten wird im Folgenden näher eingegangen.
 
 
@@ -23,6 +22,11 @@ Da aufgrund der rotatorischen Gelenke nichtlineare trigonometrische Funktionen v
 \begin{equation}
     T_{0,n}(\overrightarrow{q}) = \prod_{i=1}^{n} T_{i-1,i}(q_i)     \label{eq:inv-kin1}
 \end{equation}
+
+
+\section{Numerische Lösung}
+
+??
 
 
 \section{Geometrische Lösung}\label{sec:geometrische-losung}
@@ -101,15 +105,15 @@ Dabei entstehen wiederum zwei Lösungen, die jeweils das Handgelenk ober- oder u
 \subsubsection{3. Gelenk sechs (Endeffektor)}
 
 Nach $\theta_1$ und $\theta_5$ wird $\theta_6$ bestimmt.
-Dazu wird die Eigenschaft des UR5 herangezogen, die Z-Achsen von Gelenken zwei, drei und vier liegt stets parallel zur Y-Achse von Gelenk 1 stehen (siehe Abbildung~\ref{fig:ur5-axis}).
-Deshalb kann die Y-Achse $y_1$ beschrieben von Gelenk sechs ($Y_{6,1}$) unabhängig von $\theta_{1,2,3,4}$ und kann mithilfe von sphärischen Koordinaten als $-Y_{6,1}(-\theta_6,\theta_5)$ ($-\theta_5$ als Azimuth sowie $\theta_6$ als polaren Winkel) aufgefasst werden (Abbildung~\ref{fig:inv1-3}).
-Eine Umrechnung in kartesische Koordinaten ergibt deshalb Gleichung~\ref{eq:inv3-1}, wobei $Y_{6,1}$ mithilfe einer Drehung um $\theta_1$ um $z_1$ beschrieben werden kann (Gleichung~\ref{eq:inv3-2}).
-$Z$ und $X$ sind hierbei jeweils Einheitsvektoren der Z- und X-Achse des jeweiligen Koordinatensystems.
+Dazu wird die Eigenschaft des UR5 herangezogen, dass die Z-Achsen von Gelenken zwei, drei und vier stets parallel zur Y-Achse von Gelenk 1 verlaufen (siehe Abbildung~\ref{fig:ur5-axis}).
+Deshalb kann die Y-Achse $y_1$ beschrieben von Gelenk sechs ($Y_{6,1}$) aus unabhängig von $\theta_{1,2,3,4}$ betrachtet und mithilfe von sphärischen Koordinaten als Funktion $f(r,\gamma,\phi) = -Y_{6,1}(-\theta_6,\theta_5)$ aufgefasst werden (Radius $r=1$, $-\theta_6$ als Azimuth $\gamma$, sowie $\theta_5$ als polaren Winkel $\phi$; siehe Abbildung~\ref{fig:inv1-3}).
+Eine Umrechnung in kartesische Koordinaten ergibt deshalb Gleichung~\ref{eq:inv3-1}, wobei $Y_{6,1}$ mithilfe einer Drehung mit Winkel $\theta_1$ um die Achse $z_1$ beschrieben werden kann (Gleichung~\ref{eq:inv3-2}).
+$Z$ und $X$ entsprechen hierbei den Werten der Konvention~\ref{eq:inv-konv}.
 Nach Gleichsetzen der x- und y-Einträge der beiden Gleichungen und anschließendem Umformen erhält man $\theta_6$ (Gleichung~\ref{eq:inv3-3}).
 Dabei kann es genau eine Lösung geben.
 Falls $\sin\theta_5=0$, liegt eine Singularität vor und eine Lösung kann nicht bestimmt werden.
 Dies tritt auf, wenn neben den Achsen $z_2$, $z_3$ und $z_4$ auch Achse $z_6$ parallel steht.
-In diesem Fall kann eine beliebige Lösung gewählt werden, im Regelfall wird $\theta_6=0$ gesetzt.
+In diesem Fall kann eine beliebige Lösung gewählt werden, beispielsweise $\theta_6=0$.
 
 \begin{figure}[h]
     \centering
