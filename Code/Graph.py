@@ -125,7 +125,6 @@ class Graph:
                 if end_node in visited:
                     paths.append(get_path(shortest_connection_from, end_node))
                     path_lengths.append(visited[end_node])
-                    break
         path_lengths = np.array(path_lengths) / (2 * np.pi)
         print(f"found: {path_lengths=} (in 360deg rotations)")
         return paths, path_lengths

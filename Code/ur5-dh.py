@@ -75,8 +75,8 @@ def main2b():
 
 def main3():  # shortest path example
     planner = PlanningModule()
-    start = (45, -45, 45, 180, 90, 0)
-    end = (0, -180, 90, 180, 90, 0)
+    start = (-45, 0, -90, 180, 90, 13)
+    end = (-90, -180, 90, 180, 90, 13)
 
     pts = [[0, 0, 0],
            [0.5, 0.6, 0.8],
@@ -98,7 +98,7 @@ def main3():  # shortest path example
         print(e)
         vedo.show(*meshes, axes=1)
         exit()
-
+    print(singularities)
     print(start, end)
     print()
     print(np.round(np.rad2deg(all_paths[0])))
@@ -110,11 +110,12 @@ def main3():  # shortest path example
     plt, elms = None, None
     while True:
         for i, path in enumerate(paths):
-            plt, elms = planner.robot.animate_configurations(g.translate(path), plt=plt, elm=elms, rad=False,
+            print("version",i)
+            plt, elms = planner.robot.animate_configurations(g.translate(path)[::2], plt=plt, elm=elms, rad=False,
                                                              extras=meshes)
         # plt, elms = planner.robot.animate_configurations(planner.first_configuration_for_each_target_tf(), plt=plt,
         #                                                  elm=elms)
-        plt.interactive()  # freeze on last frame
+        # plt.interactive()  # freeze on last frame
 
 
 if __name__ == '__main__':
