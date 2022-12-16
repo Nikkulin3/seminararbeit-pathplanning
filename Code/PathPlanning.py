@@ -12,6 +12,7 @@ class PlanningModule:
     target_diff_angles = (5, 5, 5, 5, 5, 5)
 
     def __init__(self):
+        self.thetas_list = None
         self.robot = UR5()
         self.targets = []
         self.path = []
@@ -36,13 +37,15 @@ class PlanningModule:
     def partial_translation(tr: np.ndarray, fraction: float) -> np.ndarray:
         return tr * fraction
 
-    def shortest_path(self, thetas1, thetas2, rad=True, number_of_points=10):
-        self.robot.set_joint_angles(thetas1, rad=rad)
-        tf1 = self.robot.get_endeffector_transform()
-        self.robot.set_joint_angles(thetas2, rad=rad)
-        tf2 = self.robot.get_endeffector_transform()
-        self.targets = self.slerp([tf1, tf2], number_of_points)
-
+    def shortest_path(self, thetas_list, rad=True, number_of_points=10):
+        tfs = []
+        for thetas in thetas_list:
+            self.robot.set_joint_angles(thetas, rad=rad)
+            tfs.append(self.robot.get_endeffector_transform())
+        self.targets = [tfs[0]] + self.slerp(tfs, number_of_points)
+        if not rad:
+            thetas_list = np.deg2rad(thetas_list)
+        self.thetas_list = thetas_list
         return self.targets
 
     def first_configuration_for_each_target_tf(self, rad=True):
@@ -54,13 +57,17 @@ class PlanningModule:
     def all_configurations_for_each_target_tf(self, rad=True) -> Tuple[List[List[tuple]], List[tuple]]:
         all_paths = []
         singularities = []
+        t6_0 = self.thetas_list[0][5]
+        t6_1 = self.thetas_list[-1][5]
+        t6_delta = (t6_1 - t6_0)
         for i, tf in enumerate(self.targets):
             all_paths.append([])
-            for j, (configuration, singularity_found) in enumerate(zip(*self.robot.calculate_inverse_kinematics(tf))):
+            t6 = t6_0 + (i + 1) / len(self.targets) * t6_delta
+            for j, (configuration, singularity_found) in enumerate(
+                    zip(*self.robot.calculate_inverse_kinematics(tf, theta_6_if_singularity=t6))):
                 if singularity_found:
                     singularities.append((i, j))
                 all_paths[-1].append(tuple(configuration))
-
         if not rad:
             return [[tuple(y) for y in np.rad2deg(x)] for x in all_paths], singularities
         return all_paths, singularities
@@ -69,23 +76,6 @@ class PlanningModule:
         for thetas, singularities in self.first_configuration_for_each_target_tf():
             self.robot.set_joint_angles(thetas)
             yield self.robot.vedo_elements()
-
-    def random_tree(self, start, target):
-        g = Graph([])
-        vertices = [start]
-        c = ConfigurationSpace()
-        step_size = np.deg2rad(10)
-        for i in range(0, 1000):
-            x_trg = c.random_configuration()
-            x_origin = vertices[np.random.randint(0, len(vertices))]  # for rrt select closest config to x_trg instead
-
-            vec = np.array(x_trg) - x_origin
-            vec /= np.linalg.norm(vec)
-            _, x_nearest_connecting = c.nearest_free(vec * step_size + x_origin)
-
-            g.add(x_origin, x_nearest_connecting)
-            if g.is_connected(start, target):
-                break
 
 
 if __name__ == '__main__':

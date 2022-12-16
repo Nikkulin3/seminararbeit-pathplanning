@@ -118,8 +118,13 @@ class UR5:
         p05 = target_tf.transl() - d6 * target_tf.z_rot()
         p05x, p05y, _ = p05
         p05xy = [p05x, p05y]
+        a_tan = np.arctan2(p05y, p05x)
+        a_cos = d4 / np.linalg.norm(p05xy)
+        if not( -1 <= a_cos <= 1):
+            return [np.nan]
+        a_cos = np.arccos(a_cos)
         th1 = [
-            np.arctan2(p05y, p05x) + sgn * (np.arccos(d4 / np.linalg.norm(p05xy))) + np.pi / 2
+            a_tan + sgn * a_cos + np.pi / 2
             for sgn in [-1, 1]
         ]
         return th1
