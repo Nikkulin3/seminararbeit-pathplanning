@@ -1,2 +1,10 @@
 \cleardoublepage
 \chapter{Fazit und Ausblick}
+
+Mit den erläuterten Methoden kann ein kollisionsfreier gerader Pfad zwischen der momentanen Position und Stellung des Roboters zu einem erreichbaren Zielpunkt berechnet werden.
+Die beobachteten Selbstkollisionen sind vermutlich die Folge der Verwendung einer numerischen Bestimmung der inversen Kinematik mithilfe der Jakobi-Matrix, da diese Berechnungsmethodik unkompliziert ist, aber nur eine der acht möglichen Lösungen berechnen kann.
+Zudem wird gezeigt, dass beim Berechnen aller möglichen Konfigurationen einer vorgegebenen Bahn der Konfigurationsraum so weit eingegrenzt werden kann, dass in kurzer Zeit eine vollständige Lösung mit Dijkstra ermittelt werden kann.
+
+Im nächsten Schritt kann nun ein Übergang in die Praxis erfolgen.
+Hierzu muss das Programm in die Steuerung des Roboters integriert werden und in Zukunft die Pfadplanung des UR5 ersetzen.
+Es sollte zudem untersucht werden, ob die vorgestellten Methoden bereits in OMPL (ROS mit MoveIt oder CopelliaSim Plugin) existieren und ob die hier eingesetzte Kollisionsbibliothek für den UR5 besser mit einem Kollisionstest des verwendeten Frameworks ersetzt werden sollte.
