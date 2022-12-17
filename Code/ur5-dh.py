@@ -93,6 +93,7 @@ def main3():  # shortest path example
     for m in meshes:
         m.c("blue")
     meshes += [*r1.vedo_elements(), *r2.vedo_elements()]
+    # vedo.show(*meshes, axes=1, interactive=True) # comment in to enable preview preview
     try:
         all_paths, singularities = planner.all_configurations_for_each_target_tf()
         g = Graph(all_paths, rad=False, include_self_collision=include_self_collision, include_floor_collision=include_floor_collision)

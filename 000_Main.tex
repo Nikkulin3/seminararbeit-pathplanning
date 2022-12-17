@@ -1,6 +1,6 @@
 %   Version 3.0 | Lehrstuhl Produktionsinformatik  |  27.08.2020
 %%%%%%%%%  Zusätzlich benötigte Pakete in den Header einfügen  %%%%%%%%%%
-\input{src/header.tex}
+\input{src/header}
 
 %%%%%%%%%%%%%    Einbinden der Quellen    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \addbibresource{src/references.bib}
@@ -24,34 +24,34 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{document}
     \onehalfspacing
-    \input{src/pagestyle.tex}
-    \input{src/titlepage.tex}
+    \input{src/pagestyle}
+    \input{src/titlepage}
     \pagenumbering{Roman}
     \onehalfspacing
-    \input{001_Aufgabenstellung.tex}
-    \input{002_Kurzfassung.tex}
+    \input{001_Aufgabenstellung}
+    \input{002_Kurzfassung}
     \tableofcontents        % Inhaltsverzeichnis
     \listoffigures        % Abb.verzeichnis
     \listoftables        % Tabellenverzeichnis
-    \input{003_Abkuerzungsverzeichnis.tex}
+    \input{003_Abkuerzungsverzeichnis}
     \cleardoublepage
     \pagenumbering{arabic}
 %%%%%%%%%%%%%%     Eigene Kapitel hier einfügen    %%%%%%%%%%%%%%%%%%%%%%
-%    \input{010_Räumliche_Beschreibungsformalismen.tex}
-    \input{020_Direkte_Kinematik.tex}
-    \input{030_Inverse_Kinematik.tex}
-    \input{040_Pfadplanung.tex}
-    \input{050_Trajektorienplanung.tex}
-    \input{190_Fazit.tex}
-%    \input{006_Konzept.tex}
-%    \input{007_Umsetzung.tex}
-%    \input{008_Verwendung.tex}
-%    \input{009_Ausblick.tex}
+%    \input{010_Räumliche_Beschreibungsformalismen}
+    \input{020_Direkte_Kinematik}
+    \input{030_Inverse_Kinematik}
+    \input{040_Pfadplanung}
+%    \input{050_Trajektorienplanung}
+    \input{190_Fazit}
+%    \input{006_Konzept}
+%    \input{007_Umsetzung}
+%    \input{008_Verwendung}
+%    \input{009_Ausblick}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     \cleardoublepage
     \printbibliography    % Lit.verzeichnis
-%    \input{198_Anhang.tex}
-    \input{199_Abschlusserklaerung.tex}
+%    \input{198_Anhang}
+    \input{199_Abschlusserklaerung}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \end{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

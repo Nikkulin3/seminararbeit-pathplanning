@@ -7,9 +7,9 @@ Pfadplanungsalgorithmen werden häufig in der Robotik und der Automatisierungste
 Dabei werden eine Reihe an Konfigurationen zu berechnet, die den Weg von einer bestimmten Transformation in eine andere beschreiben.
 Eine einzelne Konfiguration ist im Falle des UR5 ein Tupel mit sechs Winkeln, das die Ausrichtung der sechs Gelenke des Roboters angibt.
 
-Die einfachste Form der Pfadplanung ist der kürzeste Weg zwischen zwei Punkten (Abschnitt~\ref{sec:berechnungsmethoden}), die schnellste Verbindung ist immer der Weg der direkten Kinematik mit maximaler Winkelgeschwindigkeit bei der Bewegung (Abschnitt~\ref{ch:direkte-kinematik}).
+Die einfachste Form der Pfadplanung ist der kürzeste Weg zwischen zwei Punkten (Abschnitt~\ref{sec:berechnungsmethoden}), was aber nicht der schnellsten Verbindung entspricht.
+Die schnellste Verbindung ist immer der Weg, der beschritten wird, wenn bei konstanter maximaler Winkelgeschwindigkeit zwischen beiden Transformationen gewechselt wird (Abschnitt~\ref{ch:direkte-kinematik}).
 Komplizierter wird es, wenn Beschränkungen im Arbeitsraum des Roboters, wie Kollisionen mit der Umgebung oder mit sich selbst, vorliegen.
-In diesem Fall muss ein komplizierteres Berechnungsverfahren herangezogen werden.
 
 In diesem Kapitel sollen die Grundlagen der Pfadplanung, sowie einige Algorithmen näher vorgestellt werden.
 Zudem wird in Abschnitt~\ref{sec:praxisbezug} eine einfache Implementierung der Pfadplanung vorgestellt, die ein Abfahren von Endeffektor-Stellungen ohne Selbstkollision ermöglicht.
@@ -32,20 +32,15 @@ Der für die Pfadplanung relevante Bereich ist demzufolge der in Gleichung~\ref{
     \label{eq:config-2}
 \end{equation}
 
-Je nach Algorithmus muss der Konfigurationsraum allerdings nicht im vorhinein berechnet werden, insbesondere wenn statische oder dynamische Hindernisse umfahren werden sollen.
+Je nach Algorithmus muss der Konfigurationsraum allerdings nicht im vorhinein berechnet werden, insbesondere wenn der Konfigurationsraum sehr groß ist oder dynamisch Hindernisse erkannt werden sollen.
 %Um den Kollisionsraum abzubilden wurde der Roboter in dieser Arbeit mit Kugeln und Zylindern in den Dimensionen des UR5 approximiert und in fünf-Grad Schritten jede Position auf Eigenkollision getestet, damit Pfadplanungsalgorithmen schneller auf ihre Funktionsweise hin untersucht werden können.
 
-?? Code
-
 ??Quelle
-
-% todo berechnung/beschreibung von collision detection mit bb / trees
-https://www.geometrictools.com/Documentation/DynamicCollisionDetection.pdf
 
 
 \section{Berechnungsmethoden}\label{sec:berechnungsmethoden}
 
-Um den Roboter auf dem kürzesten Weg zu einer Zielposition zu bringen, wird die Strecke oft in mehrere Zwischenstufen zwischen zwei oder mehr Transformationspunkten $T_1$ und $T_2$ unterteilt.
+Um den Roboter auf dem kürzesten Weg zu einer Zielposition zu bringen, wird die Strecke zunächst in mehrere Zwischenstufen zwischen zwei oder mehr Transformationspunkten $T_1$ und $T_2$ unterteilt.
 Jeder Schritt kann dabei mithilfe des Faktors $t \in \left[0,1\right]$ beschrieben werden (Gleichung~\ref{eq:shortest-path-1}).
 Zwischen zwei Rotationspunkten $R_1$ und $R_2$  wird in der Regel der sogenannte Slerp verwendet  (Gleichung~\ref{eq:shortest-path-2}), der jedoch erst in Quaternionen (Q1 und Q2) umgerechnet werden muss.
 Zu beachten sind zudem die Rechenregeln der Quaternionen, die hier nicht näher erklärt werden.
@@ -61,7 +56,7 @@ Zu beachten sind zudem die Rechenregeln der Quaternionen, die hier nicht näher 
 
 Die resultierende Liste von Endeffektor-Transformationen muss dann in den Konfigurationsraum des Roboters übertragen werden.
 Der UR5 hat, wie in Abschnitt~\ref{sec:geometrische-losung} berechnet, für jede Zwischentransformation oftmals bis zu acht, oder in einer Singularität sogar unendlich viele Stellungen für die Gelenke.
-Um einen geeigneten Pfad durch den Konfigurationsraum zu nehmen und die Selbstkollision sowie das Erreichen von Winkelbegrenzungen zu vermeiden, sollte deshalb ein Pfadplanungsalgorithmus verwendet werden.
+Um einen geeigneten Pfad durch den Konfigurationsraum zu nehmen und die Selbstkollision sowie das Erreichen von Winkelbegrenzungen zu vermeiden, ist die Verwendung eines Pfadplanungsalgorithmus ratsam.
 
 ?? Quelle
 
@@ -82,12 +77,14 @@ Aus diesem Grund und für die schnellere Berechnung wird deshalb oftmals eine ap
 ?? Quelle
 
 In Sampling-basierten Verfahren wird das Gruppieren aller Konfigurationen in konkave Zellen übersprungen und stattdessen nur einzelne, benötigte Konfigurationen auf Kollision geprüft.
-Das bedeutet, dass nicht, wie in Abschnitt~\ref{subsec:zellendekomposition} alle Lösungen für alle Probleme generalisiert werden sollen, sondern eine einzelne Lösung für ein einzelnes Problem gesucht ist.
-Bedingung dafür ist allerdings eine Möglichkeit, eine Konfiguration schnell auf Kollisionsfreiheit zu überprüfen.
-Insofern der Konfigurationsraum wie in Abschnitt~\ref{sec:konfigurationsraum} schon zuvor berechnet wurde, kann alternativ ein Lookup-Table verwendet werden.
-Dabei kann zwischen Single- und Multi-Query-Verfahren unterschieden werden.
+Das bedeutet, dass nicht die beste Lösung aller möglichen Lösungen ermittelt wird, sondern nur die beste aller bereits ermittelten Lösungen.
+Der Algorithmus kann dementsprechend bereits nach dem Finden der ersten Lösung terminieren.
+Bedingung dafür ist allerdings eine Möglichkeit, eine Konfiguration schnell auf Kollisionsfreiheit zu überprüfen zu können.
+Insofern der Konfigurationsraum vollständig bekannt ist oder schon zuvor berechnet wurde, kann alternativ auch ein Lookup-Table verwendet werden.
 
-\subsubsection{Single-Query}
+Im Folgenden wird zwischen Single- und Multi-Query-Verfahren unterschieden:
+
+\subsubsection{Single-Query Verfahren}
 
 Bei Single-Query-Verfahren wird für jede Abfrage ein neuer Weg gesucht, bei Multi-Query-Verfahren werden vergangene Anfragen als Hilfestellung für neue Anfragen genutzt und so eine Roadmap erzeugt.
 Üblicherweise wird beim Single-Query-Verfahren mit Startkonfiguration $q_a$ und Zielkonfiguration $q_b$ wie folgt vorgegangen:
@@ -138,7 +135,8 @@ Praxis: OMPL (MoveIt+ ROS / Copelliasim Plugin)
 Pfadplanungsalgorithmen können dazu beitragen, komplexe Pfade in einem Konfigurationsraum zu beschreiben.
 ROS (Robot Operating System) und CopelliaSim bieten bereits Frameworks, die dieses Problem lösen.
 
-Da in dieser Arbeit der Schwerpunkt auf der Selbstkollision bei der Pfadplanung liegen soll und die inverse Kinematik nahezu ohne Singularitäten direkt berechnet werden kann, kann ein deutlich vereinfachter Algorithmus verwendet werden, bei dem der gesamte Konfigurationsraum auf einmal betrachtet werden kann.
+Da in dieser Arbeit der Schwerpunkt auf der Selbstkollision bei der Pfadplanung liegen soll und die inverse Kinematik nahezu ohne Singularitäten direkt berechnet werden kann, kann ein deutlich vereinfachter Algorithmus verwendet werden.
+Das setzt allerdings voraus, dass der Kollisionsraum schon zu Beginn der Berechnung vollständig bekannt ist.
 Aus diesen Gründen wurde in der Implementierung eine Bibliothek für das Überprüfen von Selbstkollisionen angelegt, in der alle möglichen Transformationen des UR5 auf fünf Grad genau abgespeichert sind.
 
 Im implementierten Algorithmus kann zunächst für jede Zwischentransformation, die in Abschnitt~\ref{sec:berechnungsmethoden} beschrieben wurde, mithilfe der inversen Kinematik aus Abschnitt~\ref{ch:inverse-kinematik} eine Liste möglicher Zwischenkonfigurationen erstellt werden.
