@@ -75,8 +75,8 @@ def main2b():
 
 def main3():  # shortest path example
     planner = PlanningModule()
-    start = (-45, 0, -90, 180, 90, 13)
-    end = (-90, -180, 90, 180, 90, 13)
+    start = (-68, -109, -74, -248, 83, 32)
+    end = (-15, -93, -67, -109, 105, 28)
     include_self_collision = True
     include_floor_collision = True
     loose_end_configuration = True
@@ -101,6 +101,7 @@ def main3():  # shortest path example
         print(e)
         vedo.show(*meshes, axes=1)
         exit()
+    # vedo.show(*meshes, axes=1, interactive=True)
     print(singularities)
     print(start, end)
     print()
