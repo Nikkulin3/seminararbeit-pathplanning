@@ -1,6 +1,5 @@
 from Code.Configurations import ConfigurationSpace
 from Code.Transform import T
-from Graph import Graph
 from Robots import UR5
 from typing import List, Tuple
 

@@ -524,6 +524,22 @@
   langid = {english}
 }
 
+@inproceedings{duanBenchmarkingDeepReinforcement2016,
+  title = {Benchmarking {{Deep Reinforcement Learning}} for {{Continuous Control}}},
+  booktitle = {Proceedings of {{The}} 33rd {{International Conference}} on {{Machine Learning}}},
+  author = {Duan, Yan and Chen, Xi and Houthooft, Rein and Schulman, John and Abbeel, Pieter},
+  date = {2016-06-11},
+  pages = {1329--1338},
+  publisher = {{PMLR}},
+  issn = {1938-7228},
+  url = {https://proceedings.mlr.press/v48/duan16.html},
+  urldate = {2022-12-19},
+  abstract = {Recently, researchers have made significant progress combining the advances in deep learning for learning feature representations with reinforcement learning. Some notable examples include training agents to play Atari games based on raw pixel data and to acquire advanced manipulation skills using raw sensory inputs. However, it has been difficult to quantify progress in the domain of continuous control due to the lack of a commonly adopted benchmark. In this work, we present a benchmark suite of continuous control tasks, including classic tasks like cart-pole swing-up, tasks with very high state and action dimensionality such as 3D humanoid locomotion, tasks with partial observations, and tasks with hierarchical structure. We report novel findings based on the systematic evaluation of a range of implemented reinforcement learning algorithms. Both the benchmark and reference implementations are released at https://github.com/rllab/rllab in order to facilitate experimental reproducibility and to encourage adoption by other researchers.},
+  eventtitle = {International {{Conference}} on {{Machine Learning}}},
+  langid = {english},
+  file = {/home/julin/Zotero/storage/SCVCAFJU/Duan et al. - 2016 - Benchmarking Deep Reinforcement Learning for Conti.pdf}
+}
+
 @article{eberlyDynamicCollisionDetection,
   title = {Dynamic {{Collision Detection}} Using {{Oriented Bounding Boxes}}},
   author = {Eberly, David},
@@ -700,7 +716,7 @@
   location = {{Gothenburg, Sweden}},
   url = {https://odr.chalmers.se/server/api/core/bitstreams/2f3d53e7-1a9e-432b-9565-39171ac1df4c/content},
   urldate = {2022-10-26},
-  abstract = {Robot stations today have large safety zones around each station where humans are not allowed to be while the robots are moving. Often these zones are fenced, but they can also be monitored to stop the motions if anyone enters. However, it is common that the total area of a new robot station area must be kept small, or maybe an operator must be able to interact with the station, hence requiring smaller safety zones. In order to reduce these safety zones, integrators need to guarantee that the robot stations design are safe for any type of human behavior by doing a risk assessment and safety evaluation. This will support this risk assessment and safety validation of robot safety zones by developing a function that tries to falsify a station using AI and Deep Reinforcement Learning (DRL) to find defects as unexpected hitting_itself in the environment.},
+  abstract = {Robot stations today have large safety zones around each station where humans are not allowed to be while the robots are moving. Often these zones are fenced, but they can also be monitored to stop the motions if anyone enters. However, it is common that the total area of a new robot station area must be kept small, or maybe an operator must be able to interact with the station, hence requiring smaller safety zones. In order to reduce these safety zones, integrators need to guarantee that the robot stations design are safe for any type of human behavior by doing a risk assessment and safety evaluation. This will support this risk assessment and safety validation of robot safety zones by developing a function that tries to falsify a station using AI and Deep Reinforcement Learning (DRL) to find defects as unexpected collisions in the environment.},
   langid = {english},
   pagetotal = {113},
   file = {/home/julin/Zotero/storage/9Q7RL9Z2/content.pdf}
@@ -1029,7 +1045,7 @@
   pages = {6C2-1-6C2-13},
   issn = {2155-7209},
   doi = {10.1109/DASC.2015.7311450},
-  abstract = {This paper presents a scalable method to efficiently search for the most likely state trajectory leading to an event given only a simulator of a system. Our approach uses a reinforcement learning formulation and solves it using Monte Carlo Tree Search (MCTS). The approach places very few requirements on the underlying system, requiring only that the simulator provide some basic controls, the ability to evaluate certain conditions, and a mechanism to control the stochasticity in the system. Access to the system state is not required, allowing the method to support systems with hidden state. The method is applied to stress test a prototype aircraft collision avoidance system to identify trajectories that are likely to lead to near mid-air hitting_itself. We present results for both single and multi-threat encounters and discuss their relevance. Compared with direct Monte Carlo search, this MCTS method performs significantly better both in finding events and in maximizing their likelihood.},
+  abstract = {This paper presents a scalable method to efficiently search for the most likely state trajectory leading to an event given only a simulator of a system. Our approach uses a reinforcement learning formulation and solves it using Monte Carlo Tree Search (MCTS). The approach places very few requirements on the underlying system, requiring only that the simulator provide some basic controls, the ability to evaluate certain conditions, and a mechanism to control the stochasticity in the system. Access to the system state is not required, allowing the method to support systems with hidden state. The method is applied to stress test a prototype aircraft collision avoidance system to identify trajectories that are likely to lead to near mid-air collisions. We present results for both single and multi-threat encounters and discuss their relevance. Compared with direct Monte Carlo search, this MCTS method performs significantly better both in finding events and in maximizing their likelihood.},
   eventtitle = {2015 {{IEEE}}/{{AIAA}} 34th {{Digital Avionics Systems Conference}} ({{DASC}})},
   keywords = {Atmospheric modeling,Lead,Quality of service},
   file = {/home/julin/Zotero/storage/ATIZ836K/Lee et al. - 2015 - Adaptive stress testing of airborne collision avoi.pdf;/home/julin/Zotero/storage/PNVZY6PB/7311450.html}
@@ -1370,6 +1386,16 @@
   file = {/home/julin/Zotero/storage/MCP69K4H/Vol02_1936_1_Art05-pcm.pdf}
 }
 
+@software{Rllab2022,
+  title = {Rllab},
+  date = {2022-12-17T10:27:05Z},
+  origdate = {2016-04-21T17:21:22Z},
+  url = {https://github.com/rll/rllab},
+  urldate = {2022-12-19},
+  abstract = {rllab is a framework for developing and evaluating reinforcement learning algorithms, fully compatible with OpenAI Gym.},
+  organization = {{Berkeley RLL}}
+}
+
 @book{Road2050Report,
   title = {On the {{Road}} toward 2050: {{Report Massachusetts Institute}} of {{Technology Potential}} for {{Substantial Reductions}} in {{Light-Duty Vehicle Energy Use}} and {{Greenhouse Gas Emissions}}.}
 }
@@ -1445,6 +1471,25 @@
   isbn = {978-0-13-954694-5},
   pagetotal = {645},
   keywords = {Computer graphics,Object-oriented programming (Computer science)}
+}
+
+@misc{schulmanTrustRegionPolicy2017,
+  title = {Trust {{Region Policy Optimization}}},
+  author = {Schulman, John and Levine, Sergey and Moritz, Philipp and Jordan, Michael I. and Abbeel, Pieter},
+  date = {2017-04-20},
+  number = {arXiv:1502.05477},
+  eprint = {1502.05477},
+  eprinttype = {arxiv},
+  primaryclass = {cs},
+  publisher = {{arXiv}},
+  doi = {10.48550/arXiv.1502.05477},
+  url = {http://arxiv.org/abs/1502.05477},
+  urldate = {2022-12-19},
+  abstract = {We describe an iterative procedure for optimizing policies, with guaranteed monotonic improvement. By making several approximations to the theoretically-justified procedure, we develop a practical algorithm, called Trust Region Policy Optimization (TRPO). This algorithm is similar to natural policy gradient methods and is effective for optimizing large nonlinear policies such as neural networks. Our experiments demonstrate its robust performance on a wide variety of tasks: learning simulated robotic swimming, hopping, and walking gaits; and playing Atari games using images of the screen as input. Despite its approximations that deviate from the theory, TRPO tends to give monotonic improvement, with little tuning of hyperparameters.},
+  archiveprefix = {arXiv},
+  version = {5},
+  keywords = {Computer Science - Machine Learning},
+  file = {/home/julin/Zotero/storage/ANL6J8NC/Schulman et al. - 2017 - Trust Region Policy Optimization.pdf;/home/julin/Zotero/storage/PZT6PWVH/1502.html}
 }
 
 @inproceedings{sedarReinforcementLearningbasedMisbehaviour2021,
