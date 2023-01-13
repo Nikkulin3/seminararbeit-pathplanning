@@ -3,10 +3,10 @@ from Configurations import ConfigurationSpace
 
 
 class Graph:
-    def __init__(self, all_paths, exclude_over_angle_distance=np.pi / 4, rad=False, include_floor_collision=False,
-                 include_self_collision=True):
+    def __init__(self, all_paths, exclude_over_angle_distance=np.pi / 4, rad=False, include_wall_collision=False,
+                 include_self_collision=True, configuration_space=None):
         self.rad = rad
-        configs = ConfigurationSpace()
+        self.configs = configuration_space if configuration_space is not None else ConfigurationSpace()
         vertices = {}  # dict of { (configuration_tuple): vertex_index }
         # connections = [] # list of (vertex_i, vertex_j, distance)
         graph = {}
@@ -24,9 +24,7 @@ class Graph:
                 alt = {}
                 for next_config in next_node:
                     vertex_j = vertices[next_config]
-                    if include_self_collision and configs.in_obs_space(next_config, rad=rad):
-                        continue
-                    if include_floor_collision and configs.floor_collision(next_config, rad=rad, floor_height=0):
+                    if not self.configs.is_valid_path([next_config], include_wall_collision=include_wall_collision):
                         continue
                     distance = self.config_compare(config, next_config)
                     max_dist = np.max(distance)
@@ -50,7 +48,7 @@ class Graph:
     @staticmethod
     def config_compare(cfg1, cfg2):
         def norm_cfg(_cfg):
-            _cfg = np.array(_cfg) % (2 * np.pi)
+            # _cfg = np.array(_cfg) % (2 * np.pi)
             return [x if x <= np.pi else x - (2 * np.pi) for x in _cfg]
 
         return np.abs(norm_cfg(np.array(cfg1) - cfg2))
@@ -59,13 +57,6 @@ class Graph:
 
         if not self.rad:
             start_config = np.deg2rad(start_config)
-
-        _360 = 2 * np.pi
-        _180 = np.pi
-
-        # def norm_cfg(_cfg):
-        #     _cfg = np.array(_cfg) % _360
-        #     return [x if x <= _180 else x - _360 for x in _cfg]
 
         def match_config(to_match, samples):
             out = []
@@ -131,6 +122,21 @@ class Graph:
 
     def translate(self, vertices_list):
         tr = [self.vertices_translation[v] for v in vertices_list]
+
+        def norm(vel):
+            _360 = 2 * np.pi
+            if vel > np.pi:
+                return vel - _360
+            elif vel < -np.pi:
+                return vel + _360
+            return vel
+
+        for i, (p1, p2) in enumerate(zip(tr, tr[1:])):
+            velocity = np.array(p2) - p1
+            velocity = [norm(x) for x in velocity]
+            tr[i + 1] = np.array(p1) + velocity
+            pass
+
         if self.rad:
             return tr
         return np.rad2deg(tr)

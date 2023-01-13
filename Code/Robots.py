@@ -83,6 +83,15 @@ class UR5:
         "alpha": (np.pi / 2, 0, 0, np.pi / 2, -np.pi / 2, 0)
     }
 
+    ANGLE_CONSTRAINTS = [
+        (np.deg2rad(-100), np.deg2rad(45)),
+        (-2 * np.pi, 2 * np.pi),
+        (-2 * np.pi, 2 * np.pi),
+        (-2 * np.pi, 2 * np.pi),
+        (-2 * np.pi, 2 * np.pi),
+        (-2 * np.pi, 2 * np.pi),
+    ]
+
     def __init__(self, thetas_rad=None):
         self.joints = [Joint.zero_joint()]
         DH = self.DH
@@ -95,6 +104,15 @@ class UR5:
         self.color = np.random.random(3)
         if thetas_rad is not None:
             self.set_joint_angles(thetas_rad)
+
+    def within_joint_constraints(self, thetas, rad=True):
+        if not rad:
+            thetas = np.deg2rad(thetas)
+        for t, (c1, c2) in zip(thetas, self.ANGLE_CONSTRAINTS):
+            if not (c1 <= t <= c2):
+                assert np.max([c1 - t, t - c2]) < 4 * np.pi
+                return False
+        return True
 
     def set_joint_angles(self, *thetas, rad=True):
         prev: Optional[Joint] = None
@@ -122,7 +140,7 @@ class UR5:
         p05xy = [p05x, p05y]
         a_tan = np.arctan2(p05y, p05x)
         a_cos = d4 / np.linalg.norm(p05xy)
-        if not( -1 <= a_cos <= 1):
+        if not (-1 <= a_cos <= 1):
             return [np.nan]
         a_cos = np.arccos(a_cos)
         th1 = [
@@ -372,8 +390,10 @@ class UR5:
     def get_endeffector_transform(self):
         return self.joints[-1].abs_tf
 
-    def animate_configurations(self, list_of_configs, rad=True, plt=None, elm=None, extras=None) -> Tuple[
+    def animate_configurations(self, list_of_configs, nth=None, rad=True, plt=None, elm=None, extras=None) -> Tuple[
         vedo.Plotter, List[vedo.BaseActor]]:
+        list_of_configs = [list_of_configs[0] for _ in range(10)] + \
+                          list(list_of_configs[::nth]) + [list_of_configs[-1] for _ in range(10)]
         if extras is None:
             extras = []
         self.set_joint_angles(*self.get_joint_angles(), rad=rad)

@@ -9,6 +9,13 @@ from Robots import UR5
 class ConfigurationSpace:
     def __init__(self):
         self.resolution = 10
+        self.cartesian_constraints = {
+            "x": (-.45, .84),
+            "y": (-.6, 1.1),
+            # "y": (-.40, 1.05),
+            "z": (0, 1e10)
+        }
+        self.floor_height = 0
 
         try:
             self.obstacle_space, self.free_space = self.load_previous()
@@ -19,9 +26,8 @@ class ConfigurationSpace:
         self.obstacle_space = set([x[1:-1] for x in self.obstacle_space])
         self.obstacle_space_l = list(self.obstacle_space)
         self.free_space_l = list(self.free_space)
-        self.obs_tree = KDTree(self.obstacle_space_l)
-        self.free_tree = KDTree(self.free_space_l)
 
+        self.obs_tree = self.free_tree = None
 
     @staticmethod
     def load_previous():
@@ -44,6 +50,8 @@ class ConfigurationSpace:
         if rad:
             thetas = np.rad2deg(thetas)
         thetas_ = [x % 360 for x in thetas]
+        if self.free_tree is None:
+            self.free_tree = KDTree(self.free_space_l)
         dt = [x - y for x, y in zip(thetas, thetas_)]
         d, i = self.free_tree.query(tuple(thetas_[1:-1]))
         thetas_new = [dx + x for dx, x in
@@ -69,6 +77,8 @@ class ConfigurationSpace:
         return np.linalg.norm(tf2.transl() - tf1.transl())
 
     def nearest_obs(self, thetas, rad):
+        if self.obs_tree is None:
+            self.obs_tree = KDTree(self.obstacle_space_l)
         d, i = self.obs_tree.query(thetas)
         return d, self.obstacle_space_l[i]
 
@@ -135,9 +145,28 @@ class ConfigurationSpace:
         self_collision = tuple(new_thetas[1:-1]) in self.obstacle_space
         return self_collision
 
-    def floor_collision(self, thetas, rad, floor_height=0):
+    def wall_collision(self, thetas, rad):
         self.robot.set_joint_angles(thetas, rad=rad)
-        for p in self.robot.get_joint_positions():
-            if p[-1] < floor_height:
+        for i, p in enumerate(self.robot.get_joint_positions()):
+            i += 1
+            if not (self.cartesian_constraints["x"][0] <= p[0] <= self.cartesian_constraints["x"][1]):
+                # print(f"X{i} {self.cartesian_constraints['x']} vs. {p[0]}")
+                return True
+            if not (self.cartesian_constraints["y"][0] <= p[1] <= self.cartesian_constraints["y"][1]):
+                # print(f"Y{i} {self.cartesian_constraints['y']} vs. {p[1]}")
+                return True
+            if not (self.cartesian_constraints["z"][0] <= p[2] <= self.cartesian_constraints["z"][1]):
+                # print(f"Z{i} {self.cartesian_constraints['z']} vs. {p[2]}")
                 return True
         return False
+
+    def is_valid_path(self, path, rad=True, include_wall_collision=False):
+        for i, configuration in enumerate(path):
+            if not self.robot.within_joint_constraints(configuration, rad):
+                return False
+            if include_wall_collision and self.wall_collision(configuration, rad):
+                return False
+            if self.in_obs_space(configuration, rad):
+                return False
+        return True
+

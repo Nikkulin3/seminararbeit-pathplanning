@@ -36,7 +36,7 @@ class PlanningModule:
     def partial_translation(tr: np.ndarray, fraction: float) -> np.ndarray:
         return tr * fraction
 
-    def shortest_path(self, thetas_list, rad=True, number_of_points=10):
+    def shortest_path(self, thetas_list, rad=True, number_of_points=100):
         tfs = []
         for thetas in thetas_list:
             self.robot.set_joint_angles(thetas, rad=rad)
@@ -46,6 +46,44 @@ class PlanningModule:
             thetas_list = np.deg2rad(thetas_list)
         self.thetas_list = [t + np.random.rand() * 1e-10 for t in thetas_list]
         return self.targets
+
+    def direct_path(self, thetas_start, thetas_end, rad=True, number_of_points=100, loose_end_configuration=False):
+        thetas_start, thetas_end = [np.array(t) + np.random.rand() * 1e-10 for t in [thetas_start, thetas_end]]
+        if not rad:
+            thetas_start, thetas_end = np.deg2rad([thetas_start, thetas_end])
+        dim = len(self.robot.joints)
+        all_paths = []
+
+        self.robot.set_joint_angles(*thetas_end, rad=True)
+        tf = self.robot.get_endeffector_transform()
+        thetas_end_list = self.robot.calculate_inverse_kinematics(tf)[0] if loose_end_configuration else [thetas_end]
+
+        for t1 in thetas_end_list:
+            delta_t = np.array(t1) - thetas_start
+            delta_t2 = -2 * np.pi + delta_t
+            for mode in range(2 ** dim):
+                binary = format(mode, f"0{dim}b")
+                decoded_delta = [
+                    delta_t[i] if int(b) else delta_t2[i] for i, b in enumerate(binary)
+                ]
+                t1_alt = thetas_start + decoded_delta
+                found_path = np.linspace(thetas_start, t1_alt, number_of_points)
+                all_paths.append(found_path)
+        all_paths = np.array(all_paths)
+        if not rad:
+            all_paths = np.rad2deg(all_paths)
+        return all_paths
+
+    def path_length(self, path, rad):
+        prev = None
+        length = 0
+        for p in path:
+            self.robot.set_joint_angles(*p, rad=rad)
+            pos = self.robot.get_endeffector_transform().transl()
+            if prev is not None:
+                length += np.linalg.norm(np.array(pos) - prev)
+            prev = pos
+        return length
 
     def first_configuration_for_each_target_tf(self, rad=True):
         self.path = [self.robot.calculate_inverse_kinematics(tf, True)[0] for tf in self.targets]
@@ -75,6 +113,14 @@ class PlanningModule:
         for thetas, singularities in self.first_configuration_for_each_target_tf():
             self.robot.set_joint_angles(thetas)
             yield self.robot.vedo_elements()
+
+    @staticmethod
+    def path_velocity_per_step(path):
+        return [p1 - p0 for p0, p1 in zip(path, path[1:])]
+
+    @staticmethod
+    def max_velocity_step(path):
+        return np.max(np.abs(PlanningModule.path_velocity_per_step(path)))
 
 
 if __name__ == '__main__':
