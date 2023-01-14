@@ -61,10 +61,11 @@ class PlanningModule:
         for t1 in thetas_end_list:
             delta_t = np.array(t1) - thetas_start
             delta_t2 = -2 * np.pi + delta_t
-            for mode in range(2 ** dim):
-                binary = format(mode, f"0{dim}b")
+            for mode in range(2 ** (dim - 1)):
+                binary = format(mode, f"0{dim - 1}b") + "0"
                 decoded_delta = [
-                    delta_t[i] if int(b) else delta_t2[i] for i, b in enumerate(binary)
+                    delta_t[i] if (np.abs(delta_t[i]) < np.abs(delta_t2[i]) if i == dim - 1 else int(b)) else delta_t2[
+                        i] for i, b in enumerate(binary)
                 ]
                 t1_alt = thetas_start + decoded_delta
                 found_path = np.linspace(thetas_start, t1_alt, number_of_points)

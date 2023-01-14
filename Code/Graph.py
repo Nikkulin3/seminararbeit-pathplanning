@@ -34,7 +34,7 @@ class Graph:
                     graph[vertex_i][vertex_j] = np.sum(distance)
                 if len(graph[vertex_i]) == 0:
                     assert len(alt) > 0, "some path configuration is always in obstacle space"
-                    print(f"WARNING: no connection after node {vertex_i}. guessing...")
+                    # print(f"WARNING: no connection after node {vertex_i}. guessing...")
                     best_option = np.argmin(list(alt.values()))
                     graph[vertex_i][list(alt.keys())[best_option]] = list(alt.values())[best_option]
         for config in all_paths[-1]:

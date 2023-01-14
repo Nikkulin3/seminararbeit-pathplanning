@@ -7,14 +7,15 @@ from Robots import UR5
 
 
 class ConfigurationSpace:
+    CARTESIAN_CONSTRAINTS = {
+        "x": (-.45, .84),
+        "y": (-.4, 1.05),
+        "z": (.04, 1e10)
+    }
+
     def __init__(self):
         self.resolution = 10
-        self.cartesian_constraints = {
-            "x": (-.45, .84),
-            "y": (-.6, 1.1),
-            # "y": (-.40, 1.05),
-            "z": (0, 1e10)
-        }
+
         self.floor_height = 0
 
         try:
@@ -149,13 +150,13 @@ class ConfigurationSpace:
         self.robot.set_joint_angles(thetas, rad=rad)
         for i, p in enumerate(self.robot.get_joint_positions()):
             i += 1
-            if not (self.cartesian_constraints["x"][0] <= p[0] <= self.cartesian_constraints["x"][1]):
+            if not (self.CARTESIAN_CONSTRAINTS["x"][0] <= p[0] <= self.CARTESIAN_CONSTRAINTS["x"][1]):
                 # print(f"X{i} {self.cartesian_constraints['x']} vs. {p[0]}")
                 return True
-            if not (self.cartesian_constraints["y"][0] <= p[1] <= self.cartesian_constraints["y"][1]):
+            if not (self.CARTESIAN_CONSTRAINTS["y"][0] <= p[1] <= self.CARTESIAN_CONSTRAINTS["y"][1]):
                 # print(f"Y{i} {self.cartesian_constraints['y']} vs. {p[1]}")
                 return True
-            if not (self.cartesian_constraints["z"][0] <= p[2] <= self.cartesian_constraints["z"][1]):
+            if not (self.CARTESIAN_CONSTRAINTS["z"][0] <= p[2] <= self.CARTESIAN_CONSTRAINTS["z"][1]):
                 # print(f"Z{i} {self.cartesian_constraints['z']} vs. {p[2]}")
                 return True
         return False
@@ -169,4 +170,3 @@ class ConfigurationSpace:
             if self.in_obs_space(configuration, rad):
                 return False
         return True
-

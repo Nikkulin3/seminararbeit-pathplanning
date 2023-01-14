@@ -1,3 +1,4 @@
+import time
 from typing import Optional, List, Tuple, Union
 
 import numpy as np
@@ -84,7 +85,8 @@ class UR5:
     }
 
     ANGLE_CONSTRAINTS = [
-        (np.deg2rad(-100), np.deg2rad(45)),
+        (np.deg2rad(-90), np.deg2rad(90)),
+        # (-2 * np.pi, 2 * np.pi),
         (-2 * np.pi, 2 * np.pi),
         (-2 * np.pi, 2 * np.pi),
         (-2 * np.pi, 2 * np.pi),
@@ -393,17 +395,17 @@ class UR5:
     def animate_configurations(self, list_of_configs, nth=None, rad=True, plt=None, elm=None, extras=None) -> Tuple[
         vedo.Plotter, List[vedo.BaseActor]]:
         list_of_configs = [list_of_configs[0] for _ in range(10)] + \
-                          list(list_of_configs[::nth]) + [list_of_configs[-1] for _ in range(10)]
+                          list(list_of_configs[::nth]) + [list_of_configs[-1]]
         if extras is None:
             extras = []
+        points = []
         self.set_joint_angles(*self.get_joint_angles(), rad=rad)
         if elm is None:
             a, b, c, d = self.vedo_elements()
-            elm = *a, *b, *c, *d, *self.meshes(), *extras
+            elm = *a, *b, *c, *extras, *points
         if plt is None:
             plt = vedo.Plotter(interactive=False)
-            r = .75
-            axes = vedo.Axes(xrange=(-r, r), yrange=(-r, r), zrange=(0, r), xygrid=True)
+            axes = vedo.Axes(xrange=(-.45, .84), yrange=(-.4, 1.05), zrange=(0, .5), xygrid=True)
             plt += [__doc__, *elm, axes]
             plt.show(resetcam=False, viewup='z')
 
@@ -411,10 +413,12 @@ class UR5:
             plt.remove(*elm)
             self.set_joint_angles(thetas, rad=rad)
             a, b, c, d = self.vedo_elements()
-            elm = *a, *b, *c, *d, *self.meshes(), *extras
+            points.append(self.get_endeffector_transform().transl())
+            pts = vedo.Points(points).c("red")
+            elm = *a, *b, *c, *d, *self.meshes(), *extras, pts
             plt.add(*elm)
             plt.show(resetcam=False, viewup='z')
-
+        time.sleep(.5)
         return plt, elm
 
 

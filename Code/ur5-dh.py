@@ -1,6 +1,6 @@
 import numpy as np
 import vedo
-from vedo import Sphere, Point, Spline
+from vedo import Sphere, Point
 
 from Code.Configurations import ConfigurationSpace
 from Code.Graph import Graph
@@ -73,7 +73,7 @@ def main2b():
               interactive=True)
 
 
-def direct_path_example(start=None, end=None):
+def direct_path_example(start=None, end=None, prev_plt=None, walls=None):
     planner = PlanningModule()
     configs = ConfigurationSpace()
     if start is None:
@@ -84,6 +84,15 @@ def direct_path_example(start=None, end=None):
     include_wall_collision = True
     loose_end_configuration = True
 
+    if prev_plt is None:
+        plt, elms = None, None
+    else:
+        plt, _ = prev_plt
+        elms = None
+    if walls is None:
+        walls = []
+
+    print(start, end)
     r1, r2 = UR5(np.deg2rad(start)), UR5(np.deg2rad(end))
     meshes = [*r1.meshes(), *r2.meshes()]
     for m in meshes:
@@ -99,33 +108,43 @@ def direct_path_example(start=None, end=None):
     pos = r1.get_endeffector_transform().transl()
     print(pos)
     if len(valid_paths) == 0:
-        print("WARNING no valid paths, displaying 15 shortest paths")
-        valid_paths = [p for p in paths if configs.is_valid_path(p, include_wall_collision=False, rad=False)]
-        vedo.show(*meshes, axes=1, interactive=True)
+        print("WARNING no valid direct paths, (probably one ore more joints near its limits)")
+        valid_paths = []
+
+    valid_paths = [p for p in valid_paths if planner.max_velocity_step(p) < 10.]
     valid_paths.sort(key=lambda x: planner.path_length(x, rad=False))
-    plt, elms = None, None
-    while True:
-        print(f"iterating {len(valid_paths)} different movements...")
-        for i, path in enumerate(valid_paths):
-            print("version", i, "length", planner.path_length(path, rad=False))
-            plt, elms = planner.robot.animate_configurations(path, plt=plt, nth=2,
-                                                             elm=elms, rad=False, extras=meshes)
+    print(f"found {len(valid_paths)} valid (direct) different movements...")
+    for i, path in enumerate(valid_paths[:5]):
+        print("version", i, "length", planner.path_length(path, rad=False))
+        plt, elms = planner.robot.animate_configurations(path, plt=plt, nth=2,
+                                                         elm=elms, rad=False, extras=[*meshes, *walls])
+    return plt, elms
 
 
-def shortest_path_example(start=None, end=None, prev_plt=None):  # shortest path example
+def shortest_path_example(start=None, end=None, prev_plt=None, walls=None):  # shortest path example
     planner = PlanningModule()
     configs = ConfigurationSpace()
     robot = UR5()
     include_self_collision = True
     include_wall_collision = True
     loose_end_configuration = True
+
+    if prev_plt is None:
+        plt, elms = None, None
+    else:
+        plt, _ = prev_plt
+        elms = None
+    if walls is None:
+        walls = []
     constraints = np.rad2deg(robot.ANGLE_CONSTRAINTS)
-    angle_ranges = [c2 - c1 for c1, c2 in constraints]
+    angle_ranges = [np.min((c2, 180)) - np.max((c1, -180)) for c1, c2 in constraints]
     lower_limit = [c1 for c1, _ in constraints]
     while start is None or not configs.is_valid_path([start], rad=False, include_wall_collision=include_wall_collision):
         start = np.random.random(6) * angle_ranges + lower_limit  # (-68.1, -109.1, -74.1, -248.1, 83.1, 32.1)
     while end is None or not configs.is_valid_path([end], rad=False, include_wall_collision=include_wall_collision):
         end = np.random.random(6) * angle_ranges + lower_limit  # (-15, -93, -67, -109, 105, 28)
+
+    print(np.array(start).astype(int), np.array(end).astype(int))
 
     planner.shortest_path([start, end], rad=False, number_of_points=100)
 
@@ -142,30 +161,49 @@ def shortest_path_example(start=None, end=None, prev_plt=None):  # shortest path
         paths, _ = g.dijkstra(start_config=start, end_config=None if loose_end_configuration else end)
     except AssertionError as e:
         print(e)
-        print("unable to calculate shortest path, trying direct path instead...")
-        direct_path_example(start, end)
-        return
+        print("unable to calculate shortest path (collision), trying direct path instead...")
+        # vedo.show(*meshes, axes=1, interactive=True)  # comment in to enable preview
+        return direct_path_example(start, end, prev_plt=(plt, elms), walls=walls)
 
     paths = [g.translate(p) for p in paths if planner.max_velocity_step(p) < 10.]
-    paths = [paths[1]]
-    assert len(paths) > 0
+    paths = [p for p in paths if configs.is_valid_path(p, include_wall_collision=include_wall_collision, rad=False)]
+    if len(paths) == 0:
+        print("unable to calculate shortest path (near singularity), trying direct path instead...")
+        # vedo.show(*meshes, axes=1, interactive=True)  # comment in to enable preview
+        return direct_path_example(start, end, prev_plt=(plt, elms), walls=walls)
 
-    if prev_plt is None:
-        plt, elms = None, None
-    else:
-        plt, elms = prev_plt
-
-    print(f"iterating {len(paths)} different movements...")
-    for i, path in enumerate(paths):
+    print(f"found {len(paths)} (shortest) valid movements...")
+    for i, path in enumerate(paths[:5]):
         print("version", i)
-        plt, elms = planner.robot.animate_configurations(path, nth=2, plt=plt, elm=elms, rad=False, extras=meshes)
+        plt, elms = planner.robot.animate_configurations(path, nth=2, plt=plt, elm=elms, rad=False,
+                                                         extras=[*meshes, *walls])
     return plt, elms
 
 
 if __name__ == '__main__':
     # inverse_kinematics_example((0, -45, 324, 90, 0, 123))
     # direct_path_example()
+    h = .5
+    thickness = .01
     plt = None
+
+    p_x_lower, p_x_upper = ConfigurationSpace.CARTESIAN_CONSTRAINTS["x"]
+    p_y_lower, p_y_upper = ConfigurationSpace.CARTESIAN_CONSTRAINTS["y"]
+    p_z_lower, _ = ConfigurationSpace.CARTESIAN_CONSTRAINTS["z"]
+    dx = p_x_upper - p_x_lower
+    dy = p_y_upper - p_y_lower
+    p_x = dx / 2 + p_x_lower
+    p_y = dy / 2 + p_y_lower
+    walls = [
+        vedo.Box(pos=(p_x, p_y, 0), length=dx, width=dy, height=thickness),
+        vedo.Box(pos=(p_x, p_y_lower, h / 2), length=dx, width=thickness, height=h),
+        vedo.Box(pos=(p_x, p_y_upper, h / 2), length=dx, width=thickness, height=h),
+        vedo.Box(pos=(p_x_lower, p_y, h / 2), length=thickness, width=dy, height=h),
+        vedo.Box(pos=(p_x_upper, p_y, h / 2), length=thickness, width=dy, height=h),
+    ]
+    for w in walls:
+        w.opacity(.2)
     while True:
-        plt = shortest_path_example(prev_plt=plt)
+        # shortest_path_example([-100, 283-360, -264+360, -291+360, 228-360, -290+360], [42, 300-360, -41, -316+360, -30, -338+360], walls=walls)
+        plt = shortest_path_example(walls=walls, prev_plt=plt)
     # viz online: https://robodk.com/robot/Universal-Robots/UR5#View3D
