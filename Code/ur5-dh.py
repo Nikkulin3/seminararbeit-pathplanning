@@ -87,8 +87,8 @@ def direct_path_example(start=None, end=None, prev_plt=None, walls=None):
     if prev_plt is None:
         plt, elms = None, None
     else:
-        plt, _ = prev_plt
-        elms = None
+        plt, elms = prev_plt
+        elms = []
     if walls is None:
         walls = []
 
@@ -118,6 +118,7 @@ def direct_path_example(start=None, end=None, prev_plt=None, walls=None):
         print("version", i, "length", planner.path_length(path, rad=False))
         plt, elms = planner.robot.animate_configurations(path, plt=plt, nth=2,
                                                          elm=elms, rad=False, extras=[*meshes, *walls])
+    plt.remove(*meshes, *elms)
     return plt, elms
 
 
@@ -132,8 +133,7 @@ def shortest_path_example(start=None, end=None, prev_plt=None, walls=None):  # s
     if prev_plt is None:
         plt, elms = None, None
     else:
-        plt, _ = prev_plt
-        elms = None
+        plt, elms = prev_plt
     if walls is None:
         walls = []
     constraints = np.rad2deg(robot.ANGLE_CONSTRAINTS)
@@ -177,6 +177,7 @@ def shortest_path_example(start=None, end=None, prev_plt=None, walls=None):  # s
         print("version", i)
         plt, elms = planner.robot.animate_configurations(path, nth=2, plt=plt, elm=elms, rad=False,
                                                          extras=[*meshes, *walls])
+    plt.remove(*meshes, *elms)
     return plt, elms
 
 

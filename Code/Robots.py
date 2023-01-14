@@ -401,8 +401,7 @@ class UR5:
         points = []
         self.set_joint_angles(*self.get_joint_angles(), rad=rad)
         if elm is None:
-            a, b, c, d = self.vedo_elements()
-            elm = *a, *b, *c, *extras, *points
+            elm = []
         if plt is None:
             plt = vedo.Plotter(interactive=False)
             axes = vedo.Axes(xrange=(-.45, .84), yrange=(-.4, 1.05), zrange=(0, .5), xygrid=True)
