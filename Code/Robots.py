@@ -3,7 +3,7 @@ from typing import Optional, List, Tuple, Union
 
 import numpy as np
 import vedo
-from vedo import Cylinder, Arrow, Line, Sphere, Mesh
+from vedo import Cylinder, Arrow, Line, Sphere, Mesh, Point
 
 from Transform import T
 
@@ -263,28 +263,15 @@ class UR5:
         assert len(solutions) > 0, "unable to calculate any solution (out of reach)"
         return solutions, singularities
 
-    def meshes(self) -> List[Mesh]:
-        if self.vedo_meshes is not None:
-            return self.vedo_meshes
-
-        def c(b, t, d):
-            return Cylinder(pos=[b, t], r=d, c="grey").opacity(.2)
-
-        def s(x, r):
-            return Sphere(pos=x, r=r, c="grey").opacity(.2)
-
+    def mesh_definition(self):
         d1, d2, d3, d4, d5, d6 = [self.joints[i].d for i in range(6)]
-        a1, a2, a3, a4, a5, a6 = [self.joints[i].a for i in range(6)]
+        xs, ys, zs, _ = self.vedo_elements()
+        dx = [(x.top - x.base) for x in xs]
+        dz = [(z.top - z.base) for z in zs]
+        dz = [z / np.linalg.norm(z) for z in dz]
         shoulder_width = d4 / 2 - .01
         shoulder_dist = d4 * 1.2
         underarm_width = .75 * shoulder_width
-        xs, ys, zs, _ = self.vedo_elements()
-        dx = [(x.top - x.base) for x in xs]
-        dx = [x / np.linalg.norm(x) for x in dx]
-        # dy = [(y.top - y.base) for y in ys]
-        # dy = [y / np.linalg.norm(y) for y in dy]
-        dz = [(z.top - z.base) for z in zs]
-        dz = [z / np.linalg.norm(z) for z in dz]
         wrist_width = d4
         links = [
             xs[0].base,
@@ -294,78 +281,75 @@ class UR5:
             xs[3].base,
             xs[4].base - dz[4] * wrist_width
         ]
-
-        meshes = [
-            c(links[0], links[1], shoulder_width),  # base
-            s(links[1], shoulder_width),
-            # side extrusion to ellbow (shoulder)
-            c(links[1], links[2], shoulder_width),
-            s(links[2], shoulder_width),
-            # extrude back over shoulder at elbow
-            c(links[2], links[3], shoulder_width),
-            s(links[3], shoulder_width),
-            c(links[3], links[4], underarm_width),
-            s(links[4], underarm_width),
-            c(links[4], links[5], underarm_width),
-            s(links[5], underarm_width),
-            c(links[5], xs[4].base, underarm_width),
-            s(xs[4].base, underarm_width),
-            c(xs[4].base, xs[5].base, underarm_width),
-            s(xs[5].base, underarm_width),
-            c(xs[5].base, xs[6].base, underarm_width),
-            # c(xs[6].base, xs[6].base - (xs[5].base - xs[6].base), underarm_width * .9)  # gripper
+        return [
+            {"base": links[0], "top": links[1], "radius": shoulder_width},
+            {"base": links[1], "top": links[2], "radius": shoulder_width},
+            {"base": links[2], "top": links[3], "radius": shoulder_width},
+            {"base": links[3], "top": links[4], "radius": underarm_width},
+            {"base": links[4], "top": links[5], "radius": underarm_width},
+            {"base": links[5], "top": xs[4].base, "radius": underarm_width},
+            {"base": xs[4].base, "top": xs[5].base, "radius": underarm_width},
+            {"base": xs[5].base, "top": xs[6].base, "radius": underarm_width},
         ]
 
-        for m in meshes:
-            if type(m) is Cylinder:
-                for _ in range(2):
-                    m.subdivide(1, 1)
-        self.vedo_meshes = meshes
-        return meshes
+    def spheres_equivalent(self):
+        mesh_def = self.mesh_definition()
+        out = []
+        for i, x in enumerate(mesh_def):
+            base, top, radius = x["base"], x["top"], x["radius"]
+            sphere_distance = 1 * radius
+            point = base.copy()
+            vec = top - base
+            height, cyl_height = 0, np.linalg.norm(vec)
+            vec = vec / cyl_height * sphere_distance
+            while height < cyl_height - sphere_distance * 1.5:
+                point += vec
+                height += sphere_distance
+                out.append((point.copy(), radius))
+
+            if i < len(mesh_def) - 1:
+                out.append((top.copy(), radius))
+        return out
+
+    def mesh_spheres(self):
+        out = []
+        for x, r in self.spheres_equivalent():
+            out.append(Sphere(pos=x, r=r, c="blue").opacity(.2))
+            out.append(Point(pos=x, c="red"))
+        return out
+
+    def meshes(self) -> List[Mesh]:
+        if self.vedo_meshes is not None:
+            return self.vedo_meshes
+
+        def c(b, t, d):
+            return Cylinder(pos=[b, t], r=d, c="grey").opacity(.2).wireframe()
+
+        def s(x, r):
+            return Sphere(pos=x, r=r, c="grey").opacity(.2).wireframe()
+
+        mesh_def = self.mesh_definition()
+        self.vedo_meshes = []
+        for i, x in enumerate(mesh_def):
+            self.vedo_meshes.append(c(x["base"], x["top"], x["radius"]))
+            if i < len(mesh_def) - 1:
+                self.vedo_meshes.append(s(x["top"], x["radius"]))
+        return self.vedo_meshes
 
     def hitting_itself(self):
-        meshes = self.meshes()
+        spheres = self.spheres_equivalent()
 
-        def distance(actor, other_actor) -> float:
-            distances = actor_test_pts[actor].distance_to(other_actor, signed=True)
-            if type(distances) is not np.ndarray:
-                distances = distances.pointdata["Distance"]
-            index = np.argmin(distances)
-            return distances[index]
+        def intersect(o1, o2):
+            p1, r1 = o1
+            p2, r2 = o2
+            center_distance = np.linalg.norm(np.array(p1) - p2)
+            intersecting_distance = r1 + r2
+            return center_distance <= intersecting_distance
 
-        def center_dist(actor, other_actor):
-            return np.linalg.norm(np.array(actor.GetCenter()) - other_actor.GetCenter())
-
-        def intersect(one_actor, other_actor):
-            if center_dist(one_actor, other_actor) > (one_actor.diagonal_size() + other_actor.diagonal_size()) / 2:
-                return False
-            return distance(one_actor, other_actor) < min_dist and distance(other_actor, one_actor) < min_dist
-
-        actor_test_pts = {}
-        for m in meshes:
-            pts = m.points()
-            np.random.shuffle(pts)
-            pts = pts[::int(max(1., len(pts) / 30))]
-            actor_test_pts[m] = vedo.Points(pts)
-        # intersecting
-        min_dist = -.01
-        to_test = [
-            (1, 9),  # oder (2, 8) for cylinder collision
-            (4, 10),
-            (2, 13),
-            (2, 14),
-            (3, 13),
-            (3, 14),
-            # (4, 14),
-            # (5, 14),
-            # (6, 14),
-            (8, 14),
-        ]
-
-        for i, j in to_test:
-            intersects = intersect(meshes[i], meshes[j])
-            if intersects:
-                return True
+        for i, sphere1 in enumerate(spheres):
+            for sphere2 in spheres[i + 4:]:
+                if intersect(sphere1, sphere2):
+                    return True
         return False
 
     def vedo_elements(self):
@@ -446,4 +430,13 @@ def main2b():
 
 
 if __name__ == '__main__':
-    main2b()
+    r = UR5()
+    plt = vedo.Plotter()
+    elms = []
+    while True:
+        r.set_joint_angles(*tuple(np.random.randint(low=-180, high=180, size=6)), rad=False)
+        print(r.hitting_itself())
+        plt.remove(*elms)
+        elms = *r.meshes(), *r.mesh_spheres()
+        plt.add(elms)
+        vedo.show(elms, interactive=True, axes=1)

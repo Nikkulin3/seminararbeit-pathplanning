@@ -187,7 +187,7 @@ def calculate_obstacle_space():
 
 
 if __name__ == '__main__':
-    calculate_obstacle_space()
+    # calculate_obstacle_space()
     # inverse_kinematics_example((0, -45, 324, 90, 0, 123))
     # direct_path_example()
     h = .5

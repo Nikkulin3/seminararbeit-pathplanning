@@ -1,4 +1,6 @@
+import datetime
 import pickle
+import time
 
 import numpy as np
 from scipy.spatial import KDTree
@@ -74,27 +76,41 @@ class ConfigurationSpace:
         return np.rad2deg(r)
 
     @staticmethod
-    def calculate():
+    def calculate(multithreading=True):
         from pathos.multiprocessing import ProcessingPool as Pool, cpu_count
-        ConfigurationSpace.tested = 0
-        pool = Pool(processes=cpu_count())
-        print("pool created")
+        global counter
+        counter = 0
+        threads = cpu_count()
+        pool = Pool(processes=threads)
+        start_time = time.perf_counter()
 
         def solver(problem):
-            print(problem)
+            global counter
             robot = UR5()
             robot.set_joint_angles(*problem, rad=False)
-            ConfigurationSpace.tested += 1
+            counter += 1
+            if counter % 100 == 0:
+                percent = counter / len(problems) * threads
+                eta = datetime.timedelta(seconds=(time.perf_counter() - start_time) / percent * (1 - percent))
+                print(
+                    f"\ntested: {counter}/{int(len(problems)/threads)}, ({percent * 100:.1f}%), "
+                    f"eta: {datetime.datetime.now() + eta}, {eta}")
             if robot.hitting_itself():
                 return problem
-            if ConfigurationSpace.tested % 100 == 0:
-                print(
-                    f"tested: {ConfigurationSpace.tested}/{len(problems)}, ({ConfigurationSpace.tested / len(problems) * 100:.1f}%)")
             return None
 
         problems = list(ConfigurationSpace.__problem_generator())
-        print("problems created")
-        results = pool.uimap(solver, problems)
+
+        if multithreading and threads > 1:
+            print(f"start calculating with multiprocessing pool ({threads} workers)")
+            results = pool.amap(solver, problems)
+            while not results.ready():
+                print(".", end='')
+                time.sleep(5)
+            results = results.get()
+        else:
+            results = [solver(p) for p in problems]
+
         solution = [r for r in results if r is not None]
         with open("obstacle_space.pkl", "wb") as f:
             pickle.dump(solution, f)
@@ -143,3 +159,6 @@ class ConfigurationSpace:
             if self.in_obs_space(configuration, rad):
                 return False
         return True
+
+
+counter = 0
