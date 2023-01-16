@@ -1,10 +1,12 @@
 \cleardoublepage
 \chapter{Fazit und Ausblick}
 
-Mit den erläuterten Methoden kann ein kollisionsfreier gerader Pfad zwischen der momentanen Position und Stellung des Roboters zu einem erreichbaren Zielpunkt berechnet werden.
-Die beobachteten Selbstkollisionen sind vermutlich die Folge der Verwendung einer numerischen Bestimmung der inversen Kinematik mithilfe der Jakobi-Matrix, da diese Berechnungsmethodik unkompliziert ist, aber nur eine der acht möglichen Lösungen berechnen kann.
-Zudem wird gezeigt, dass beim Berechnen aller möglichen Konfigurationen einer vorgegebenen Bahn der Konfigurationsraum so weit eingegrenzt werden kann, dass in kurzer Zeit eine vollständige Lösung mit Dijkstra ermittelt werden kann.
+Mit den erläuterten Methoden kann ein kollisionsfreier Pfad zwischen der momentanen Position und Stellung des Roboters zu einem erreichbaren Zielpunkt auf zwei verschiedene Weisen berechnet werden.
+Zum einen kann der kürzeste Weg für den Greifer zwischen den beiden Positionen gefahren werden.
+Dabei werden für alle Zwischenpunkte mögliche Kollisionen und Übergänge in die nächste Konfiguration ermittelt und im Anschluss der kürzeste Weg in den übrigen Wegpunkten als Liste von Zwischenkonfigurationen ausgegeben.
+Des Weiteren kann der direkte Weg gefahren werden, bei dem sich jedes Gelenk mit konstanter Winkelgeschwindigkeit vorwärts oder rückwärts zu den acht möglichen Zielstellungen bewegt.
+Dabei bewegt sich der Greifer meist in einem Bogen zum Ziel.
 
 Im nächsten Schritt kann nun ein Übergang in die Praxis erfolgen.
 Hierzu muss das Programm in die Steuerung des Roboters integriert werden und in Zukunft die Pfadplanung des UR5 ersetzen.
-Es sollte zudem untersucht werden, ob die vorgestellten Methoden bereits in OMPL (ROS mit MoveIt oder CopelliaSim Plugin) existieren und ob die hier eingesetzte Kollisionsbibliothek für den UR5 besser mit einem Kollisionstest des verwendeten Frameworks ersetzt werden sollte.
+Es sollte zudem untersucht werden, ob die implementierten Methoden bereits in OMPL (ROS mit MoveIt oder CopelliaSim Plugin) existieren und ob die hier eingesetzte Kollisionsbibliothek für den UR5 besser mit einem Kollisionstest des verwendeten Frameworks ersetzt werden sollte.

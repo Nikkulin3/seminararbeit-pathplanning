@@ -12,32 +12,30 @@ class ConfigurationSpace:
         "y": (-.4, 1.05),
         "z": (.04, 1e10)
     }
+    RESOLUTION = 10
 
-    def __init__(self):
-        self.resolution = 10
-
-        self.floor_height = 0
-
-        try:
-            self.obstacle_space, self.free_space = self.load_previous()
-        except FileNotFoundError:
-            self.obstacle_space = []
-            self.free_space = []
+    def __init__(self, obs_space=None):
+        if obs_space is not None:
+            self.obstacle_space = obs_space
+        else:
+            try:
+                self.obstacle_space = self.load_previous()
+            except FileNotFoundError:
+                self.obstacle_space = []
         self.robot = UR5()
         self.obstacle_space = set([x[1:-1] for x in self.obstacle_space])
         self.obstacle_space_l = list(self.obstacle_space)
-        self.free_space_l = list(self.free_space)
 
-        self.obs_tree = self.free_tree = None
+        self.obs_tree = None
 
     @staticmethod
     def load_previous():
         with open("obstacle_space.pkl", "rb") as f:
-            with open("free_space.pkl", "rb") as f2:
-                return set(pickle.load(f)), set(pickle.load(f2))
+            return set(pickle.load(f))
 
-    def __problem_generator(self):
-        resolution_degrees = self.resolution
+    @staticmethod
+    def __problem_generator():
+        resolution_degrees = ConfigurationSpace.RESOLUTION
         t1, t6 = 0, 0
         # for t1 in range(0, 360, resolution_degrees): # t1 does not matter
         for t2 in range(0, 360, resolution_degrees):
@@ -45,24 +43,8 @@ class ConfigurationSpace:
                 for t4 in range(0, 360, resolution_degrees):
                     for t5 in range(0, 360, resolution_degrees):
                         # for t6 in range(0, 360, resolution_degrees): # t6 does not matter
-                        yield t1, t2, t3, t4, t5, t6
-
-    def nearest_free(self, thetas, rad=True):
-        if rad:
-            thetas = np.rad2deg(thetas)
-        thetas_ = [x % 360 for x in thetas]
-        if self.free_tree is None:
-            self.free_tree = KDTree(self.free_space_l)
-        dt = [x - y for x, y in zip(thetas, thetas_)]
-        d, i = self.free_tree.query(tuple(thetas_[1:-1]))
-        thetas_new = [dx + x for dx, x in
-                      zip(dt, [thetas_[0]] + list(self.free_space_l[i]) + [thetas_[-1]])
-                      ]
-        thetas_new[0], thetas_new[-1] = [int(np.round(x / self.resolution) * self.resolution) for x in
-                                         [thetas_new[0], thetas_new[-1]]]
-        if rad:
-            thetas_new = np.deg2rad(thetas_new)
-        return d, thetas_new
+                        config = (t1, t2, t3, t4, t5, t6)
+                        yield config
 
     @staticmethod
     def angle_distance(thetas1, thetas2):
@@ -91,45 +73,36 @@ class ConfigurationSpace:
             return r
         return np.rad2deg(r)
 
-    def calculate(self):
+    @staticmethod
+    def calculate():
         from pathos.multiprocessing import ProcessingPool as Pool, cpu_count
-
+        ConfigurationSpace.tested = 0
         pool = Pool(processes=cpu_count())
+        print("pool created")
 
         def solver(problem):
+            print(problem)
             robot = UR5()
             robot.set_joint_angles(*problem, rad=False)
+            ConfigurationSpace.tested += 1
             if robot.hitting_itself():
-                print(problem)
                 return problem
+            if ConfigurationSpace.tested % 100 == 0:
+                print(
+                    f"tested: {ConfigurationSpace.tested}/{len(problems)}, ({ConfigurationSpace.tested / len(problems) * 100:.1f}%)")
             return None
 
-        problems = list(self.__problem_generator())
-        results = pool.map(solver, problems)
+        problems = list(ConfigurationSpace.__problem_generator())
+        print("problems created")
+        results = pool.uimap(solver, problems)
         solution = [r for r in results if r is not None]
         with open("obstacle_space.pkl", "wb") as f:
             pickle.dump(solution, f)
-        self.obstacle_space = solution
-        self.free_space = [x[1:-1] for x in self.__problem_generator() if x not in self.obstacle_space]
-        with open("free_space.pkl", "wb") as f:
-            pickle.dump(self.free_space, f)
-        # n = 0
-        # t0 = time()
-        # tot = int(360 / resolution_degrees) ** 6
-        # n += 1
-        # for problem in problem_generator():
-        #     t1 = time()
-        #     if t1 - t0 > 2:
-        #         t0 = t1
-        #         print(
-        #             f"{n}/{tot} ({np.round(n / tot * 100, 2)}%), found: {len(self.obstacle_space)}")
-        #     self.robot.set_joint_angles(*problem, rad=False)
-        #     if self.robot.hitting_itself():
-        #         self.obstacle_space.add(problem)
         print("done")
+        return ConfigurationSpace()
 
     def round_theta(self, theta):
-        res = self.resolution
+        res = self.RESOLUTION
         return int(res * np.round(theta / res)) % 360
 
     def in_obs_space(self, thetas, rad):

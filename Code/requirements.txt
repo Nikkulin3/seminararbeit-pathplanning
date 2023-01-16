@@ -2,3 +2,4 @@ numpy
 vedo
 scipy
 sympy
+pathos

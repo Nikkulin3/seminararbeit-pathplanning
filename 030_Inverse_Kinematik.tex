@@ -26,13 +26,10 @@ Im Falle des UR5 ist dieser Ansatz aufgrund der oben genannten Einwände nicht a
 
 \section{Numerische Lösung}
 
-?? Quelle
-%?? alt methode file:///home/julin/Downloads/MScThesis\_Marco\_de\_Gier.pdf
-
 Mit numerischer Approximation können Gelenkwinkeländerungen mit vergleichsweise geringem Rechenaufwand bestimmt werden.
 Zur Berechnung der Gelenkwinkel des nächsten Zeitschritts wird die Geschwindigkeitskinematik aus Abschnitt~\ref{sec:geschwindigkeitskinematik} herangezogen und mithilfe der Jakobi-Matrix eine Winkeländerung relativ zur momentanen Transformation approximiert.
 Nach Umformen von Gleichung~\ref{eq:kin-4} in Gleichung~\ref{eq:numerik-1} kann $\theta$ durch lineare Approximation näherungsweise bestimmt werden (siehe Gleichung~\ref{eq:numerik-2}).
-Dabei sind dx, dy und dz die Distanz zwischen Startpunkt (Zeitpunkt $t$) und Zielpunkt (Zeitpunkt $t+1$), sowie $d\alpha$, $d\beta$ und $d\gamma$ die Differenzen der Eulerwinkel der Matrix $R_{0,6}$.
+Dabei sind dx, dy und dz die Distanz zwischen Startpunkt (Zeitpunkt $t$) und Zielpunkt (Zeitpunkt $t+1$), sowie $d\alpha$, $d\beta$ und $d\gamma$ die Differenzen der Eulerwinkel der Matrix $R_{0,6}$~\cite[123]{sicilianoRobotics2009}.
 \begin{equation}
     \dot{\theta} =  J^{-1} \cdot v_6 =
     \begin{pmatrix}

@@ -80,7 +80,7 @@ class UR5:
     DH = {
         # "theta": (0, 0, 0, 0, 0, 0),
         "a": (0, -.425, -.3922, 0, 0, 0),
-        "d": (0.089159, 0, 0, 0.10915, 0.09465, 0.0823),
+        "d": (0.089159, 0, 0, 0.10915, 0.09465, 0.0823 + .126),
         "alpha": (np.pi / 2, 0, 0, np.pi / 2, -np.pi / 2, 0)
     }
 
@@ -313,7 +313,9 @@ class UR5:
             c(xs[4].base, xs[5].base, underarm_width),
             s(xs[5].base, underarm_width),
             c(xs[5].base, xs[6].base, underarm_width),
+            # c(xs[6].base, xs[6].base - (xs[5].base - xs[6].base), underarm_width * .9)  # gripper
         ]
+
         for m in meshes:
             if type(m) is Cylinder:
                 for _ in range(2):
@@ -325,7 +327,9 @@ class UR5:
         meshes = self.meshes()
 
         def distance(actor, other_actor) -> float:
-            distances = actor_test_pts[actor].distance_to(other_actor, signed=True).pointdata["Distance"]
+            distances = actor_test_pts[actor].distance_to(other_actor, signed=True)
+            if type(distances) is not np.ndarray:
+                distances = distances.pointdata["Distance"]
             index = np.argmin(distances)
             return distances[index]
 
@@ -352,6 +356,10 @@ class UR5:
             (2, 14),
             (3, 13),
             (3, 14),
+            # (4, 14),
+            # (5, 14),
+            # (6, 14),
+            (8, 14),
         ]
 
         for i, j in to_test:

@@ -42,8 +42,7 @@ def inverse_kinematics_example(thetas=(0, -90, -90, 0, 90, 0)):  # inverse kinem
               interactive=True)
 
 
-def main2b():
-    thetas = (0, -23, -146, 173, -95, 181)
+def inverse_kinematics_example2(thetas=(0, -23, -146, 173, -95, 181)):
     robot = UR5()
     robot.set_joint_angles(*thetas, rad=False)
 
@@ -118,7 +117,8 @@ def direct_path_example(start=None, end=None, prev_plt=None, walls=None):
         print("version", i, "length", planner.path_length(path, rad=False))
         plt, elms = planner.robot.animate_configurations(path, plt=plt, nth=2,
                                                          elm=elms, rad=False, extras=[*meshes, *walls])
-    plt.remove(*meshes, *elms)
+    if plt is not None:
+        plt.remove(*meshes, *elms)
     return plt, elms
 
 
@@ -177,11 +177,17 @@ def shortest_path_example(start=None, end=None, prev_plt=None, walls=None):  # s
         print("version", i)
         plt, elms = planner.robot.animate_configurations(path, nth=2, plt=plt, elm=elms, rad=False,
                                                          extras=[*meshes, *walls])
-    plt.remove(*meshes, *elms)
+    if plt is not None:
+        plt.remove(*meshes, *elms)
     return plt, elms
 
 
+def calculate_obstacle_space():
+    ConfigurationSpace.calculate()
+
+
 if __name__ == '__main__':
+    calculate_obstacle_space()
     # inverse_kinematics_example((0, -45, 324, 90, 0, 123))
     # direct_path_example()
     h = .5
@@ -204,6 +210,8 @@ if __name__ == '__main__':
     ]
     for w in walls:
         w.opacity(.2)
+
+    inverse_kinematics_example()
     while True:
         # shortest_path_example([-100, 283-360, -264+360, -291+360, 228-360, -290+360], [42, 300-360, -41, -316+360, -30, -338+360], walls=walls)
         plt = shortest_path_example(walls=walls, prev_plt=plt)

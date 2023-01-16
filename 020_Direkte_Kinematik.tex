@@ -38,9 +38,6 @@ Ein Beispiel hierfür findet sich in Gleichung~\ref{eq:inv-rule2}.
 
 \section{DH-Konvention}\label{sec:dh-konvention}
 
-?? Quelle
-
-
 Um Rotation und Translation eines Gliedes der kinematischen Kette darzustellen kann die sog.\ DH-Konvention oder auch DH-Transformation verwendet werden.
 Diese Konvention beschreibt ein standardisiertes Vorgehen wie die Transformation des nächsten Gelenks im Koordinatensystem des momentanen Gelenks ausgedrückt werden soll~\cite{denavitKinematicNotationLowerPair1955,craigIntroductionRoboticsMechanics2009}.
 Es gelten die folgenden Regeln:
@@ -219,7 +216,7 @@ Nach Datenblatt~\cite{universalrobotsUR5TechnicalSpecifications} hat der UR5 ein
 Um einen Roboter in Bewegung darzustellen, ist nicht nur die Transformation der Gelenke relevant, sondern auch dessen Kinematik und Dynamik.
 Dies ist besonders relevant, da in der echten Welt bestimmte Maximalwerte für (Winkel-) Geschwindigkeit und Beschleunigung, sowie Trägheit und Drehmoment eingehalten werden müssen, um den sicheren Betrieb sowie das Verhalten der Masse korrekt abzubilden.
 
-Für die Berechnung der Geschwindigkeit des Endeffektors im Gelenk $e$ kann die Jakobi-Matrix verwendet werden.
+Für die Berechnung der Geschwindigkeit des Endeffektors im Gelenk $e$ kann die Jakobi-Matrix verwendet werden~\cite[105ff]{sicilianoRobotics2009}.
 Dabei gilt für eine Drehung nach DH-Konvention um Achse $z_{n-1}$ für die Geschwindigkeit Gleichung~\ref{eq:kin-1} und für die Winkelgeschwindigkeit Gleichung~\ref{eq:kin-2}.
 Für translatorische Gelenke gelten stattdessen Gleichungen~\ref{eq:kin-1-1} und~\ref{eq:kin-2-1}.
 Die Vektoren $z_{i}$ entsprechen jeweils der Einheitsvektor der z-Achse $z_{i} = \frac{Z_{0,i}}{\lvert Z_{0,i} \rvert}$ auf Basis der Transformationsmatrix $T_{0,i} = \prod_{n=1}^{i}T_{n-1,n}$ (siehe Konvention Gleichung~\ref{eq:inv-konv}).
