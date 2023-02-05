@@ -33,15 +33,17 @@ Der für die Pfadplanung relevante Bereich ist demzufolge der in Gleichung~\ref{
 \end{equation}
 
 Je nach Algorithmus muss der Konfigurationsraum allerdings nicht im vorhinein berechnet werden, insbesondere wenn der Konfigurationsraum sehr groß ist oder dynamisch Hindernisse erkannt werden sollen.
-Um Kollisionen einfach und schnell berechnen zu können wurde in dieser Arbeit ein auf zehn Grad genauer Kollisionsraum berechnet und in einer Bibliothek abgespeichert.
+Um Kollisionen einfach und schnell berechnen zu können wurde in dieser Arbeit ein auf zehn Grad genauer Kollisionsraum vollständig berechnet und in einer Bibliothek abgespeichert.
 Um Kollisionen abzufragen, wird die Suchkonfiguration dafür immer auf den nächstmöglichen vorberechneten Wert auf- oder abgerundet.
+Es könnte allerdings schneller und genauer sein, die Kollisionen stattdessen während der Laufzeit mit einer externen Bibliothek zu berechnen.
 
 
 \section{Pfad des kürzesten Weges}\label{sec:kurzesterweg}
 
-Um den Roboter auf dem kürzesten Weg zu einer Zielposition zu bringen, wird die Strecke zunächst in mehrere Zwischenstufen zwischen zwei oder mehr Transformationspunkten $T_1$ und $T_2$ unterteilt.
+Der kürzeste Weg bezeichnet die Bewegung des Roboters, der die geringste Translationsbewegung des Endeffektors zur Folge hat, und entspricht einer Geraden zwischen Start- und Zielpunkt (siehe Abbildung~\ref{fig:pth1}).
+Um dies zu berechnen, wird die Strecke zunächst in mehrere Zwischenstufen zwischen zwei oder mehr Transformationspunkten $T_1$ und $T_2$ unterteilt.
 Jeder Schritt kann dabei mithilfe des Faktors $t \in \left[0,1\right]$ beschrieben werden (Gleichung~\ref{eq:shortest-path-1}).
-Zwischen zwei Rotationspunkten $R_1$ und $R_2$  wird in der Regel der sogenannte Slerp verwendet  (Gleichung~\ref{eq:shortest-path-2}), der jedoch erst in Quaternionen (Q1 und Q2) umgerechnet werden muss.
+Zwischen zwei Rotationsmatrizen $R_1$ und $R_2$  wird in der Regel der sogenannte Slerp verwendet  (Gleichung~\ref{eq:shortest-path-2}), der jedoch erst in Quaternionen ($Q_1$ und $Q_2$) umgerechnet werden muss.
 Zu beachten sind zudem die Rechenregeln der Quaternionen, die hier nicht näher erklärt werden.
 
 \begin{equation}
@@ -53,7 +55,7 @@ Zu beachten sind zudem die Rechenregeln der Quaternionen, die hier nicht näher 
     \label{eq:shortest-path-2}
 \end{equation}
 
-Die resultierende Liste von Endeffektor-Transformationen muss dann mithilfe der inversen Kinematik aus Abschnitt~\ref{ch:inverse-kinematik} in den Konfigurationsraum des Roboters übertragen werden.
+Die resultierende Liste von Endeffektor-Transformationen muss im Anschluss mithilfe der inversen Kinematik aus Abschnitt~\ref{ch:inverse-kinematik} in den Konfigurationsraum des Roboters übertragen werden.
 Der UR5 hat, wie in Abschnitt~\ref{sec:geometrische-losung} berechnet, für jede Zwischentransformation oftmals bis zu acht, oder in einer Singularität sogar unendlich viele Stellungen für die Gelenke.
 Dabei werden Konfigurationen, bei denen eine Kollision besteht, entfernt und Singularitäten durch Addition eines kleinen Werts $\epsilon$ umgangen.
 
@@ -61,12 +63,18 @@ Anschließend wird ein gerichteter Graph erstellt, dessen Knoten die Konfigurati
 Nachdem der Graph erstellt wurde, müssen alle Knoten, die nicht vom Startknoten erreichbar sind, mithilfe einer Breitensuche entfernt werden.
 Danach kann zum Beispiel mit Dijkstra der kürzeste Weg im Graph beschrieben werden, der in diesem Fall genau den Weg darstellt, bei dem sich die Gelenke am wenigsten bewegen müssen.
 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width = .8\textwidth]{Bilder/shortestpath}
+    \caption{Beispiel eines kürzesten Pfades zwischen zwei Endeffektor-Trans\-for\-ma\-tio\-nen mit Zwischenpunkten}\label{fig:pth1}
+\end{figure}
+
 
 \section{Pfad der direkten Bewegung}\label{sec:direkterweg}
 
 Um von einer Start- in eine Zielkonfiguration zu fahren, können die Zielwinkel auch alle direkt linear angefahren werden.
 Dafür werden die Zwischenpositionen für jedes Gelenk mit Startwinkel $\theta_{i_0}$ und Zielwinkel $\theta_{i_1}$ mithilfe des Faktors $t \in \left[0,1\right]$ berechnet (Gleichung~\ref{eq:dir-1}).
-Da die Winkelbeschränkungen des UR5 bei $\pm 360\deg$ liegen, existieren für jeden Winkel $\theta_{i_1}$ bis zu zwei Alternativwinkel.
+Da die Winkelbeschränkungen des UR5 bei $\pm 360^\circ$ liegen, existieren für jeden Winkel $\theta_{i_1}$ bis zu zwei Alternativwinkel.
 Die Menge der Zielwinkel erweitert sich dabei wie in Gleichung~\ref{eq:dir-2}.
 
 \begin{equation}
@@ -82,6 +90,32 @@ Die Menge der Zielwinkel erweitert sich dabei wie in Gleichung~\ref{eq:dir-2}.
 Mit den sechs Freiheitsgraden des UR5 ergeben sich damit in der Regel $2^{6}=64$ Pfade zur Zielkonfiguration.
 Werden allerdings für eine Zieltransformation acht mögliche Zielkonfigurationen betrachtet, steigt dieser Wert auf $8\cdot 64=512$ Pfade.
 In der Implementierung kann dann der kürzeste der kollisionsfreien Pfade gewählt und ausgeführt werden.
+
+Die resultierende Bewegung des Endeffektors ist dabei bei dieser Methode nicht linear und ergibt nach Auswahl des kürzesten Pfads ergibt der Algorithmus meist einen flachen Bogen (Abbildung~\ref{fig:pth2}).
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width = .8\textwidth]{Bilder/directpath}
+    \caption{Beispiel eines direkten Pfades zwischen zwei Endeffektor-Trans\-for\-ma\-tio\-nen mit Zwischenpunkten}\label{fig:pth2}
+\end{figure}
+
+
+\section{Implementierung}
+
+Im Code stehen verschiedene Beispiele zur Ausführung zur Verfügung.
+Nach Installation der \enquote{requirements.txt} kann die Datei \enquote{main.py} gestartet werden, um eine zufallsbasierte Demo der beiden obigen Algorithmen durchzuführen.
+Es wird zunächst eine zufällige Start- und Zielkonfiguration gewählt und dann eine Suche nach einem kürzesten Pfad durchgeführt.
+Bei einem Fehlschlag wird auf den direkten Weg als alternative Methode zurückgegriffen.
+Die besten Ergebnisse können im Anschluss in der Simulation betrachtet werden.
+Dieses Vorgehen wiederholt sich für andere zufällige Parameter weiter.
+Alternativ können die folgenden Beispiele und Funktionen aber auch direkt ausgeführt werden:
+
+\begin{itemize}
+    \item \enquote{calculate\_obstacle\_space()} zur Neuberechnung aller möglichen Selbstkollisionen (lange Rechenzeit)
+    \item \enquote{inverse\_kinematics\_example()} Anzeige aller acht Konfigurationen für eine gegebene Endeffektor-Transformation
+    \item \enquote{direct\_path\_example()} Anzeige der kürzesten fünf direkten Wege für die Aufgabe
+    \item \enquote{shortest\_path\_example()} Anzeige des kürzesten Wegs für die Aufgabe, mit Fallback auf vorherige Methode.
+\end{itemize}
 
 %\subsection{Zellendekomposition}\label{subsec:zellendekomposition}
 %?? Quelle
@@ -156,7 +190,6 @@ In der Implementierung kann dann der kürzeste der kollisionsfreien Pfade gewäh
 %Dynamisch (Geschwindigkeit)
 %Einbezug der Constraints in den Algorithmen
 %Praxis: OMPL (MoveIt+ ROS / Copelliasim Plugin)
-
 
 
 %

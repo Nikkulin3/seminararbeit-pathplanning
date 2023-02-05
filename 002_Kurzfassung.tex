@@ -3,8 +3,14 @@
 \chaptermark{Kurzfassung}
 
 
-In dieser Arbeit wird die Steuerung des UR5 näher untersucht und eine Ursache der häufig auftretenden Selbstkollisionen ermittelt.
-Zudem werden alternative Algorithmen erläutert und die Vor- und Nachteile der verschiedenen Methoden verglichen.
-Dabei wird eine direkte und schnelle Berechnungsmethode zur Bestimmung der Gelenkwinkel vorgestellt und die auftretenden Selbstkollisionen durch dadurch begründet, dass die Software des UR5 vermutlich stattdessen auf einer numerischen Methode der inversen Kinematik basiert.
-Es wird festgestellt, dass für jede Endeffektor-Transformation in der Regel bis zu acht mögliche Roboterstellungen existieren und ein Algorithmus vorgestellt,
-der ohne komplizierte Pfadplanung alle Lösungswege für eine gerade Bahn berechnen und auf Kollision überprüfen kann.
+In dieser Arbeit wird die Steuerung des UR5 näher untersucht und eine Ursache der häufig auftretenden Notstopps ermittelt.
+Es stellt sich heraus, dass die Ursache für die Stopps oftmals ein unmöglicher vom Benutzer vorgegebener Bewegungsablauf ist, der aber vom Roboter erst kurz vor einer möglichen Kollision registriert wird.
+Infolge wird dann immer ein Notstopp ausgeführt, der einen manuellen Neustart des Roboters erforderlich macht.
+Als Lösung des Problems werden zwei Lösungsmethoden vorgestellt und in einer Simulationsumgebung implementiert:
+Die Berechnungsmethode zur Bestimmung des kürzesten Weges kann verwendet werden, falls eine lineare Bewegung des Endeffektors zwischen Start- und Zielpunkt möglich ist,
+andernfalls wird auf eine Methode zur Bestimmung der direkten Bewegung zurückgegriffen.
+
+Um die obigen Algorithmen zu unterstützen, wird außerdem eine Methode zur Kollisionsüberprüfung und eine geometrische Berechnungsmethode zur Bestimmung der inversen Kinematik vorgestellt,
+die für jede Endeffektor-Transformation in der Regel bis zu acht mögliche Roboterstellungen berechnen kann.
+
+Um die implementierten Lösungen zu beschreiben, wird zunächst in Kapitel~\ref{ch:direkte-kinematik} auf die direkte Kinematik und die DH-Konvention eingegangen, dann in Kapitel~\ref{ch:inverse-kinematik} verschiedene Lösungen für die inverse Kinematik vorgestellt und zum Schluss in Kapitel~\ref{ch:pfadplanung} die Pfadplanungsalgorithmen vorgestellt.

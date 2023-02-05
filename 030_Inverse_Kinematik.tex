@@ -24,7 +24,7 @@ Da aufgrund der rotatorischen Gelenke nichtlineare trigonometrische Funktionen v
 Im Falle des UR5 ist dieser Ansatz aufgrund der oben genannten Einwände nicht anwendbar und wird an dieser Stelle deshalb nicht detailliert ausgeführt.
 
 
-\section{Numerische Lösung}
+\section{Numerische Lösung}\label{sec:numerische-losung}
 
 Mit numerischer Approximation können Gelenkwinkeländerungen mit vergleichsweise geringem Rechenaufwand bestimmt werden.
 Zur Berechnung der Gelenkwinkel des nächsten Zeitschritts wird die Geschwindigkeitskinematik aus Abschnitt~\ref{sec:geschwindigkeitskinematik} herangezogen und mithilfe der Jakobi-Matrix eine Winkeländerung relativ zur momentanen Transformation approximiert.
@@ -48,19 +48,19 @@ Da die Ergebnisse auf den vorherigen Winkelstellungen aufbauen und um ein sinnvo
 In~\cite{degierControlRoboticArm2015} wurde hierzu experimentell ermittelt, dass beim UR5 ein Abstand von $40\mu m$ über eine Trajektorie der Länge $1m$ in jede Richtung einen Fehler von bis zu $0.1mm$ verursachen kann.
 Zudem fällt auf, dass in diesem Verfahren wird nur eine einzige Lösung für eine Trajektorie generiert wird.
 Dies kann deshalb unter Umständen dazu führen, dass ein ungeeigneter Pfad durch den Konfigurationsraum gewählt und eine Selbstkollision herbeigeführt wird (siehe Abschnitt~\ref{sec:konfigurationsraum}).
-Es ist möglich, dass diese Berechnungsmethodik auch in der installierten Steuerungssoftware des UR5 verwendet wird und der UR5 deshalb beim Anfahren von Zielkoordinaten oft in Situationen gerät, bei denen eine Selbstkollision nicht mehr vermeidbar ist und ein Notstopp eingeleitet wird.
+Es ist möglich, dass diese Berechnungsmethodik auch in der installierten Steuerungssoftware des UR5 verwendet wird und der UR5 deshalb beim Anfahren von Zielkoordinaten in Situationen geraten kann, bei denen eine Selbstkollision nicht mehr vermeidbar ist und ein Notstopp eingeleitet wird.
 
 
 \section{Geometrische Lösung}\label{sec:geometrische-losung}
 Die schnellste Berechnung der Gelenkwinkel wird in einer direkten analytischen Lösung erreicht.
 Da dies aber oft nicht möglich ist, kann mithilfe der geometrischen Eigenschaften des jeweiligen Roboters eine geometrische Lösung ausgearbeitet werden.
 Diese Berechnung ist dann immer noch direkt, allerdings kann sie nicht universell für alle Roboter gleichsam eingesetzt werden.
-Im Falle des UR5 ist die Berechnung aufgrund des ähnlichen Aufbaus nur auf den UR5e und den UR10 nach Änderung der DH-Parameter übertragbar.
+Im Falle des UR5 kann die folgende Rechnung aufgrund des ähnlichen Aufbaus nach Anpassung der DH-Parameter vollständig auf den UR5e und den UR10 übertragen werden.
 
 Zudem wird oft, um die Berechnung zu vereinfachen, in den äußeren drei Gelenken eines Sechsarmroboters ein Handwurzelpunkt eingeführt, in dem sich die Achsgeraden dieser Gelenke schneiden.
 Da die Drehung des sogenannten Handgelenks die Position des Handwurzelpunktes nicht verändert, kann so zuerst die Berechnung der Position des Handwurzelpunkts mithilfe der Zieltransformation durchgeführt werden und im Anschluss unabhängig die Berechnung der restlichen Gelenke stattfinden.
 Beim UR5 liegt kein Handwurzelpunkt vor, was den Vorteil hat, dass weniger Singularitäten vorliegen als bei vergleichbaren Robotern.
-Obwohl die Berechnung der Inversen Kinematik erschwert ist, kann ein ruhigeres und mehr vorhersehbares Bewegungsverhalten erwartet werden (siehe Abschnitt~\ref{sec:singularitaten}).
+Obwohl die Berechnung der Inversen Kinematik erschwert ist, kann aus diesem Grund ein ruhigeres und vorhersehbareres Bewegungsverhalten erwartet werden (siehe Abschnitt~\ref{sec:singularitaten}).
 
 Dennoch kann durch eine Analyse der geometrischen Eigenschaften und der geringen Zahl der Singularitäten des UR5 eine Lösung von $\overrightarrow{\theta}$ gefunden werden.
 Die Strategie hierbei ist, beim ersten Gelenk zu beginnen und nach und nach die anderen Gelenke mit der Transformation $T_{0,6}$ des Endeffektors zu verknüpfen.
@@ -108,8 +108,7 @@ Dabei enstehen zwei Lösungen, die die Schulter des Roboters entweder links oder
 \subsubsection{2. Gelenk fünf (oberes Handgelenk)}
 
 Im Anschluss kann $\theta_5$ bestimmt werden, da der y-Teil der Position von Gelenk 6 relativ zu Gelenk 1 ($P_{1,6y}$) nur mithilfe von $\theta_5$ und bereits bekannter Parameter $P_{0,6}$, $\theta_1$ und der DH-Parameter berechnet werden kann (siehe Abbildung~\ref{fig:inv1-2}).
-Aus dieser Erkenntnis ergibt sich Gleichung~\ref{eq:inv2-1}
-$P_{1,6y}$ erhält man durch die Rotation des Ursprungssystems $T_{0,6}$ um die $z_1$-Achse (Gleichung~\ref{eq:inv2-2}).
+Aus dieser Erkenntnis ergibt sich Gleichung~\ref{eq:inv2-1}, $P_{1,6y}$ erhält man durch die Rotation des Ursprungssystems $T_{0,6}$ um die $z_1$-Achse (Gleichung~\ref{eq:inv2-2}).
 In Kombination erhält man die Gleichung für $\theta_5$ (Gleichung~\ref{eq:inv2-3}).
 Dabei entstehen wiederum zwei Lösungen, die jeweils das Handgelenk ober- oder unterhalb des Arms platzieren.
 \begin{equation}
@@ -178,7 +177,7 @@ In diesem Fall kann eine beliebige Lösung gewählt werden, beispielsweise $\the
 
 \subsubsection{4. Gelenk drei (Ellenbogen)}
 
-Die verbleibenden drei Gelenke haben alle parallele Achsen und lassen sich dadurch zu einem zweidimensionalen System vereinfachen (siehe Abbildung~\ref{fig:inv1-4}, rechts).
+Die verbleibenden drei Gelenke haben alle parallele Achsen und lassen sich dadurch zu einem zweidimensionalen System vereinfachen (siehe Abbildung~\ref{fig:inv1-4}).
 Um $\theta_3$ zu berechnen kann der Winkel $\phi_3$ zu Hilfe genommen werden (siehe Gleichung~\ref{eq:inv4-1}).
 Die Werte $a_2$, $a_3$ sind dabei die DH-Parameter der jeweiligen Gelenke und $\lvert P_{1,4xz} \rvert$ ist der Abstand zwischen Gelenk 1 und Gelenk 4, dessen relative Position bereits bekannt ist.
 Aufgrund der Geometrie gilt: $\lvert P_{1,4xz} \rvert \in \lvert a_2 \pm a_3 \rvert$
@@ -270,12 +269,12 @@ Neben den DH-Parametern und der gewünschten Transformation des Endeffektors mus
     \label{eq:inv7-6}
 \end{equation}
 
-Die Schritte zur Berechnung der inversen Kinematik können für das bessere Verständnis im Code direkt nachvollzogen und visualisiert werden. (?? Referenz)
+Die Schritte zur Berechnung der inversen Kinematik können für das bessere Verständnis im Code innerhalb der Klasse \enquote{UR5} nachvollzogen werden.
 
 
 \section{Singularitäten}\label{sec:singularitaten}
 
-Wie in Abschnitt~\ref{sec:geometrische-losung} ermittelt, existiert beim UR5 genau eine Position, bei der eine Singularität vorliegt.
+Wie in Abschnitt~\ref{sec:geometrische-losung} ermittelt, existiert beim UR5 genau eine Situation, bei der eine Singularität vorliegt.
 Singularitäten zeichnen sich dadurch aus, dass es unendlich viele Lösungen für eine bestimmte Zieltransformation gibt.
 In der Regel tritt dies genau dann auf, wenn zwei Rotationsachsen parallel zueinander stehen und ihre Bewegung durch das Drehen in gegensätzliche Richtungen beliebig ausgleichen können.
 

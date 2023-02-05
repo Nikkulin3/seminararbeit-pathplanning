@@ -181,19 +181,9 @@ def shortest_path_example(start=None, end=None, prev_plt=None, walls=None):  # s
         plt.remove(*meshes, *elms)
     return plt, elms
 
-
-def calculate_obstacle_space():
-    ConfigurationSpace.calculate()
-
-
-if __name__ == '__main__':
-    # calculate_obstacle_space()
-    # inverse_kinematics_example((0, -45, 324, 90, 0, 123))
-    # direct_path_example()
+def wall_visuals():
     h = .5
     thickness = .01
-    plt = None
-
     p_x_lower, p_x_upper = ConfigurationSpace.CARTESIAN_CONSTRAINTS["x"]
     p_y_lower, p_y_upper = ConfigurationSpace.CARTESIAN_CONSTRAINTS["y"]
     p_z_lower, _ = ConfigurationSpace.CARTESIAN_CONSTRAINTS["z"]
@@ -210,9 +200,19 @@ if __name__ == '__main__':
     ]
     for w in walls:
         w.opacity(.2)
+    return walls
 
-    inverse_kinematics_example()
+
+def calculate_obstacle_space():
+    ConfigurationSpace.calculate()
+
+
+if __name__ == '__main__':
+    # calculate_obstacle_space() # neuberechnung des Obs-Space (dauert lange)
+    # inverse_kinematics_example((0, -45, 324, 90, 0, 123)) # beispiel für inverse kinematik
+    # direct_path_example() # beispiel für direkte kinematik
+    # shortest_path_example() # beispiel für kürzesten weg mit fallback option direkter weg falls unmöglich
+    # direct_path_example() # beispiel für direkten weg
+    plt = None
     while True:
-        # shortest_path_example([-100, 283-360, -264+360, -291+360, 228-360, -290+360], [42, 300-360, -41, -316+360, -30, -338+360], walls=walls)
-        plt = shortest_path_example(walls=walls, prev_plt=plt)
-    # viz online: https://robodk.com/robot/Universal-Robots/UR5#View3D
+        plt = shortest_path_example(walls=wall_visuals(), prev_plt=plt)

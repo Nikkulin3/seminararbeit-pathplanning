@@ -36,16 +36,16 @@ Ein Beispiel hierfür findet sich in Gleichung~\ref{eq:inv-rule2}.
 \end{equation}
 
 
-\section{DH-Konvention}\label{sec:dh-konvention}
+\section{Denavit-Hartenberg-Konvention}\label{sec:dh-konvention}
 
-Um Rotation und Translation eines Gliedes der kinematischen Kette darzustellen kann die sog.\ DH-Konvention oder auch DH-Transformation verwendet werden.
+Um Rotation und Translation eines Gliedes der kinematischen Kette darzustellen kann die sog.\ \acf{dhkonv} oder auch DH-Transformation verwendet werden.
 Diese Konvention beschreibt ein standardisiertes Vorgehen wie die Transformation des nächsten Gelenks im Koordinatensystem des momentanen Gelenks ausgedrückt werden soll~\cite{denavitKinematicNotationLowerPair1955,craigIntroductionRoboticsMechanics2009}.
 Es gelten die folgenden Regeln:
 
 \begin{enumerate}
     \item Achse $z_{n}$ liegt entlang der Bewegungsachse des Gelenks $n$
-    \item Achse $x_{n}$ liegt auf der kürzesten Verbindung zwischen Achsen $z_{n-1}$ und $z_{n}$.
-    \item Die $y_{n}$ Achse wird rechtshändig ergänzt.
+    \item Achse $x_{n}$ liegt auf der kürzesten Verbindung zwischen Achsen $z_{n-1}$ und $z_{n}$
+    \item Die $y_{n}$ Achse wird rechtshändig ergänzt
 \end{enumerate}
 
 Dabei sind die Ursprünge der Gelenkkordinatensysteme oftmals nicht im Gelenkursprung, was Komplexität für die Berechnung von Transformationen verringert.
@@ -158,9 +158,6 @@ Für die Beschreibung eines Joints wird der vorhergehende Link als \enquote{pare
 Zudem müssen im Feld \enquote{origin} Translation und Rotation des Ursprungs im Koordinatensystem des Parent Links, sowie im Feld \enquote{axis} je nach Gelenk die Rotationsachse, Translationsachse oder Normale der Bewegungsoberfläche angegeben werden.
 Desweiteren ist es möglich, Schnittstellen für die Bewegung der Motoren zu definieren und Bewegungslimits für die Gelenke anzugeben, um die Ansteuerung des Roboters und die Bewegungsplanung zu vereinfachen.
 
-Die Schritte zur Berechnung der direkten Kinematik können für das bessere Verständnis im Code ?? (Anhang referenz) direkt nachvollzogen und visualisiert werden.
-
-
 \section{Beschreibung des UR5}\label{sec:ur5-in-dh}
 Der in dieser Arbeit betrachtete Roboter ist der UR5e von Universal Robots.
 Dieser ist ein vergleichsweise günstiger Roboter mit verringerter Zahl an Singularitäten (siehe Abschnitt~\ref{sec:singularitaten}), sechs Gelenken und einer offenen kinematischen Kette.
@@ -252,3 +249,5 @@ Um die Geschwindigkeit des Endeffektors $v_6$ zu erhalten, muss die Matrix mit d
     J_{0,6}\cdot\dot{\theta}
     \label{eq:kin-4}
 \end{equation}
+
+Die Geschwindigkeitskinematik kann unter anderem dafür verwendet werden, um die Winkelstellung des Roboters für eine gewünschte Zieltransformation des Endeffektors numerisch zu approximieren (siehe Abschnitt~\ref{sec:numerische-losung})
